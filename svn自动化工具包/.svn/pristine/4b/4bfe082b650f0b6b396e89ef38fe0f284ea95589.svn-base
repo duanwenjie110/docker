@@ -1,0 +1,248 @@
+#!/bin/bash
+
+#set -xv
+
+#检查需要的配置信息是否存在
+checkExist(){
+	if [[ -z $1 ]] || [[ -z $2 ]]
+	then echo "--------------------------------$3 ip or port is not found, please check and retry----------------------------"
+	exit
+	fi
+}
+
+
+#检查命令是否正确执行
+checkFunctions (){
+if [ $? -ne 0 ] 
+then
+	echo "comand execute fail"
+	exit	
+fi
+}
+
+stty erase ^H
+path=$1
+choice=$2
+tgtIp=$3
+prj_dir_path=${path}
+dest_config_path=$path/javaWar/config
+
+#修改load-balanc.properties
+modLoad-balance(){
+	#获取ip 下同
+	ip=`cat $prj_dir_path/warConfigInfo.ini|grep "load-balance"|awk -F " " '{print $2}' |sed 's/ip=//g'`
+	#获取端口 下同
+	port=`cat $prj_dir_path/warConfigInfo.ini|grep "load-balance"|awk -F " " '{print $3}' |sed 's/port=//g'`
+	checkExist "$ip" "$port" "load-balance"
+	echo $ip
+	echo $port
+	#根据获取的ip和端口修改配置文件
+	sed -ri "/load.balanc.ip=/s/(load.balanc.ip=)[^ ]+()/\1$ip\2\r/; /load.balanc.port=/s/(load.balanc.port=)[^ ]+()/\1$port\2\r/" $dest_config_path/jwzh/*/load-balanc.properties
+}
+
+#修改Config.js文件
+modConfig(){
+	ip=`cat $prj_dir_path/warConfigInfo.ini|grep "config"|awk -F " " '{print $2}' |sed 's/ip=//g'`
+	port=`cat $prj_dir_path/warConfigInfo.ini|grep "config"|awk -F " " '{print $3}' |sed 's/port=//g'`
+	checkExist "$ip" "$port" "config"
+	echo $ip
+	echo $port
+	sed -ri "/http:\/\//s/(http:\/\/)[^ ]+()/\1$ip:$port\2\'\r/" $dest_config_path/jwzh/*/config.js
+}
+
+#修改第一层文件夹中的websocket.properties
+modSocket-io-websocket(){
+	ip=`cat $prj_dir_path/warConfigInfo.ini|grep "socket-io-websocket"|awk -F " " '{print $2}' |sed 's/ip=//g'`
+	port=`cat $prj_dir_path/warConfigInfo.ini|grep "socket-io-websocket"|awk -F " " '{print $3}' |sed 's/port=//g'`
+	checkExist "$ip" "$port" "socket-io-websocket"
+	echo $ip
+	echo $port
+	sed -ri "/websocket.host=/s/(websocket.host=)[^ ]+()/\1$ip\2\r/; /websocket.port=/s/(websocket.port=)[^ ]+()/\1$port\2\r/" $dest_config_path/*/websocket.properties
+}
+
+#修改第二层文件夹中的websocket.properties
+modJwzh-websocket(){
+	ip=`cat $prj_dir_path/warConfigInfo.ini|grep "jwzh-websocket"|awk -F " " '{print $2}' |sed 's/ip=//g'`
+	port=`cat $prj_dir_path/warConfigInfo.ini|grep "jwzh-websocket"|awk -F " " '{print $3}' |sed 's/port=//g'`
+	checkExist "$ip" "$port" "jwzh-websocket"
+	echo $ip
+	echo $port
+	sed -ri "/websocket.request.host=/s/(websocket.request.host=)[^ ]+()/\1$ip\2\r/; /websocket.request.port=/s/(websocket.request.port=)[^ ]+()/\1$port\2\r/" $dest_config_path/*/*/websocket.properties
+}
+
+#修改第一层文件夹中的db.properties
+modShallowMysql(){
+	ip=`cat $prj_dir_path/warConfigInfo.ini|grep "mysql"|awk -F " " '{print $2}' |sed 's/ip=//g'`
+	port=`cat $prj_dir_path/warConfigInfo.ini|grep "mysql"|awk -F " " '{print $3}' |sed 's/port=//g'`
+
+	checkExist "$ip" "$port" "mysql"
+	echo $ip
+	echo $port
+
+	sed -ri "/mysql:\/\//s/(mysql:\/\/)[^ ]+(\/.*)/\1$ip\2/; /mysql:\/\//s/(mysql:\/\/)[^ ]+(\/.*)/\1$ip\2/" $dest_config_path/*/db.properties
+}
+
+#修改第二层文件夹中的db.properties
+modDeepMysql(){
+	ip=`cat $prj_dir_path/warConfigInfo.ini|grep "mysql"|awk -F " " '{print $2}' |sed 's/ip=//g'`
+	port=`cat $prj_dir_path/warConfigInfo.ini|grep "mysql"|awk -F " " '{print $3}' |sed 's/port=//g'`
+
+	checkExist "$ip" "$port" "mysql"
+	echo $ip
+	echo $port
+
+	sed -ri "/mysql:\/\//s/(mysql:\/\/)[^ ]+(\/.*)/\1$ip\2/; /mysql:\/\//s/(mysql:\/\/)[^ ]+(\/.*)/\1$ip\2/" $dest_config_path/*/*/db.properties
+}
+
+#修改gridfs-nginx.properties
+modGridfs-nginx(){
+	ip=`cat $prj_dir_path/warConfigInfo.ini|grep "gridfs-nginx"|awk -F " " '{print $2}' |sed 's/ip=//g'`
+	port=`cat $prj_dir_path/warConfigInfo.ini|grep "gridfs-nginx"|awk -F " " '{print $3}' |sed 's/port=//g'`
+	checkExist "$ip" "$port" "gridfs-nginx"
+	echo $ip
+	echo $port
+	sed -ri "/gridfs.nginx.host=/s/(gridfs.nginx.host=)[^ ]+()/\1$ip\2\r/; /gridfs.nginx.port=/s/(gridfs.nginx.port=)[^ ]+()/\1$port\2\r/" $dest_config_path/*/*/gridfs-nginx.properties
+}
+
+#修改mongodb.properties
+modMongodb(){
+	ip=`cat $prj_dir_path/warConfigInfo.ini|grep "mongodb"|awk -F " " '{print $2}' |sed 's/ip=//g'`
+	port=`cat $prj_dir_path/warConfigInfo.ini|grep "mongodb"|awk -F " " '{print $3}' |sed 's/port=//g'`
+	checkExist "$ip" "$port" "mongodb"
+	echo $ip
+	echo $port
+	sed -ri "/mongo.host=/s/(mongo.host=)[^ ]+()/\1$ip\2\r/; /mongo.port=/s/(mongo.port=)[^ ]+()/\1$port\2\r/" $dest_config_path/*/*/mongodb.properties
+}
+
+#修改第一层文件夹中的rabbitmq.properties
+modShallowRabbitmq(){
+	ip=`cat $prj_dir_path/warConfigInfo.ini|grep "rabbitmq"|awk -F " " '{print $2}' |sed 's/ip=//g'`
+	port=`cat $prj_dir_path/warConfigInfo.ini|grep "rabbitmq"|awk -F " " '{print $3}' |sed 's/port=//g'`
+	checkExist "$ip" "$port" "rabbitmq"
+	echo $ip
+	echo $port
+	sed -ri "/rabbitmq.host=/s/(rabbitmq.host=)[^ ]+()/\1$ip\2\r/; /rabbitmq.port=/s/(rabbitmq.port=)[^ ]+()/\1$port\2\r/" $dest_config_path/*/rabbitmq.properties
+	sed -ri "/rabbitmq.host=/s/(rabbitmq.host=)[^ ]+()/\1$ip\2\r/" $dest_config_path/*/cms.properties
+}
+
+#修改第二层文件夹中的rabbitmq.properties
+modDeepRabbitmq(){
+	ip=`cat $prj_dir_path/warConfigInfo.ini|grep "rabbitmq"|awk -F " " '{print $2}' |sed 's/ip=//g'`
+	port=`cat $prj_dir_path/warConfigInfo.ini|grep "rabbitmq"|awk -F " " '{print $3}' |sed 's/port=//g'`
+	checkExist "$ip" "$port" "rabbitmq"
+	echo $ip
+	echo $port
+	sed -ri "/rabbitmq.host=/s/(rabbitmq.host=)[^ ]+()/\1$ip\2\r/; /rabbitmq.port=/s/(rabbitmq.port=)[^ ]+()/\1$port\2\r/" $dest_config_path/*/*/rabbitmq.properties
+}
+
+#修改第一层文件夹中的redis.properties
+modShallowRedis(){
+	ip=`cat $prj_dir_path/warConfigInfo.ini|grep "redis"|awk -F " " '{print $2}' |sed 's/ip=//g'`
+	port=`cat $prj_dir_path/warConfigInfo.ini|grep "redis"|awk -F " " '{print $3}' |sed 's/port=//g'`
+	checkExist "$ip" "$port" "redis"
+	echo $ip
+	echo $port
+	sed -ri "/redis.host=/s/(redis.host=)[^ ]+()/\1$ip\2\r/; /redis.port=/s/(redis.port=)[^ ]+()/\1$port\2\r/" $dest_config_path/*/redis*.properties
+}
+
+#修改第二层文件夹中的redis.properties
+modDeepRedis(){
+	ip=`cat $prj_dir_path/warConfigInfo.ini|grep "redis"|awk -F " " '{print $2}' |sed 's/ip=//g'`
+	port=`cat $prj_dir_path/warConfigInfo.ini|grep "redis"|awk -F " " '{print $3}' |sed 's/port=//g'`
+	checkExist "$ip" "$port" "redis"
+	echo $ip
+	echo $port
+	sed -ri "/spring.redis.host=/s/(spring.redis.host=)[^ ]+()/\1$ip\2\r/; /spring.redis.port=/s/(spring.redis.port=)[^ ]+()/\1$port\2\r/" $dest_config_path/*/*/redis.properties
+}
+
+#修改cms.properties
+modCms(){
+	ip=`cat $prj_dir_path/warConfigInfo.ini|grep "cms"|awk -F " " '{print $2}' |sed 's/ip=//g'`
+	port=`cat $prj_dir_path/warConfigInfo.ini|grep "cms"|awk -F " " '{print $3}' |sed 's/port=//g'`
+	checkExist "$ip" "$port" "cms"
+	echo $ip
+	echo $port
+	sed -ri "/cms.ip=/s/(cms.ip=)[^ ]+()/\1$ip\2\r/; /cms.port=/s/(cms.port=)[^ ]+()/\1$port\2\r/" $dest_config_path/*/cms.properties
+	}
+
+#替换组合1，写入load-balance所需的配置信息
+replace1(){
+	#写入load-balance所需的配置信息
+	sed -i "/load-balance/d" $prj_dir_path/warConfigInfo.ini
+	checkFunctions
+	sed -i '$a\load-balance: ip='"$tgtIp"' port=8080' $prj_dir_path/warConfigInfo.ini
+	checkFunctions
+	#修改配置文件
+    modShallowMysql
+	modShallowRabbitmq
+	modShallowRedis
+}
+
+#替换组合2
+replace2(){
+	modCms
+	modShallowMysql
+	modShallowRedis
+	modShallowRabbitmq
+}
+
+#替换组合3，写入所需前置配置文件
+replace3(){
+    #写入config.js所需的配置信息
+	sed -i "/config/d" $prj_dir_path/warConfigInfo.ini
+	checkFunctions
+	sed -i '$a\config: ip='"$tgtIp"' port=9092' $prj_dir_path/warConfigInfo.ini
+	checkFunctions
+	
+	#写入socket-io-websocket所需的配置信息
+	sed -i "/socket-io-websocket/d" $prj_dir_path/warConfigInfo.ini
+	checkFunctions
+	sed -i '$a\socket-io-websocket: ip='"$tgtIp"' port=9092' $prj_dir_path/warConfigInfo.ini
+	checkFunctions
+	
+	#写入jwzh-websocket所需的配置信息
+	sed -i "/jwzh-websocket/d" $prj_dir_path/warConfigInfo.ini
+	checkFunctions
+	sed -i '$a\jwzh-websocket: ip='"$tgtIp"' port=8080' $prj_dir_path/warConfigInfo.ini
+	checkFunctions
+	
+	#修改配置文件
+	modSocket-io-websocket
+	modDeepMysql
+	modGridfs-nginx
+	modLoad-balance
+	modMongodb
+	modDeepRabbitmq
+	modDeepRedis
+	modJwzh-websocket
+	modConfig
+}
+if [[ $choice == "stream-loadbalance-jwzh/vod-loadbalance-jwzh" ]];then
+replace1
+	
+elif [[ $choice == "javaCms/mq-jwzh" ]];then
+replace2
+
+elif [[ $choice == "socketio-jwzh/jwzh/background" ]];then
+replace3
+
+elif [[ $choice == "All" ]];then
+replace1
+replace2
+replace3
+else
+	echo ""
+fi
+
+
+
+
+
+
+
+#ip=`cat $prj_dir_path/warConfigInfo.ini|grep "face"|awk -F " " '{print $2}' |sed 's/ip=//g'`
+#port=`cat $prj_dir_path/warConfigInfo.ini|grep "face"|awk -F " " '{print $3}' |sed 's/port=//g'`
+#checkExist "$ip" "$port" "face"
+#echo $ip
+#echo $port
+#ed -ri "/face.host=/s/(face.host=)[^ ]+()/\1$ip\2\r/; /face.port=/s/(face.port=)[^ ]+()/\1$port\2\r/"  $dest_config_path/*/*/face.properties

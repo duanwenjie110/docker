@@ -1,0 +1,22 @@
+# base image
+FROM phpenv:V1.0.0H1.0.0
+
+# MAINTAINER
+MAINTAINER hxie@wtoe.cn
+
+# put linux-mss.tar.bz2 into /usr/local/ and unpack mss
+ADD linux-mss.tar.bz2 /usr/local/
+
+ENV PATH /usr/local/nginx-mss/sbin:/etc/:/usr/local/php/:/usr/local/php/bin:$PATH
+COPY entrypoint.sh /usr/local/nginx-mss/sbin/
+
+RUN cd /usr/local/nginx-mss/sbin/ && \
+chmod 777 entrypoint.sh
+
+# change dir
+WORKDIR /usr/local/nginx-mss/sbin
+
+#
+
+# execute command when container exec
+ENTRYPOINT ["entrypoint.sh"]

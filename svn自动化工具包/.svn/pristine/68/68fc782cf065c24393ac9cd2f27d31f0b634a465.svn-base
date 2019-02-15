@@ -1,0 +1,154 @@
+#! /bin/bash
+
+#set -xv
+stty erase ^H
+curPwd=`pwd`
+prj_dir_path=${curPwd}
+hostCfg="host"
+serviceCfg="service"
+#仓库端口
+repository_port=`cat $prj_dir_path/centerhost |awk 'NR==2'|sed 's/\r//g'`
+#挂载目录
+tomcat_dir=`cat $prj_dir_path/centerhost |awk 'NR==3'|sed 's/\r//g'`
+cfg_path=javaWar/config
+
+ConfigInfoList="stream-loadbalance-jwzh/vod-loadbalance-jwzh socketio-jwzh/jwzh/background javaCms/mq-jwzh All Exit"
+
+getHostIpList()
+{
+	#获取所以主机Ip地址
+	localHostListIp=`cat ${prj_dir_path}/${hostCfg}|awk '{print $1}'|sed 's/\r//g'`
+	#get host info
+
+	for hostIp in $localHostListIp
+		{
+			if [ -z "$ret_hostIplist" ]
+				then
+					ret_hostIplist="$hostIp"
+				else
+				ret_hostIplist="$ret_hostIplist $hostIp"
+			fi
+		}
+	}
+
+chooseType()
+{
+	index=1
+	while (( "$index" <= $#))
+	do
+		echo "$index.${!index}"
+		let "index++"
+	done
+
+	while :
+	do
+		printf "Please input your choice:"
+		read ANSWER
+		if [ "$ANSWER" = "" ]
+		then
+			ANSWER=1;
+			break
+		fi
+
+		inputType=$ANSWER
+		teststr=${inputType#*[!0-9]}
+		if [ "$inputType" != "$teststr" ]
+		then
+			echo "number can only contain 0 to 9."
+		elif [ "$inputType" -eq "0" ]
+		then
+			echo "number equals to 0, error."
+		elif [ `echo $inputType | grep ^0` ]
+		then
+			echo "number error."
+		elif [ "$inputType" -ge "$index" ]
+		then
+			echo "number is greater than limit."
+		else
+			break
+		fi
+	done
+
+	ret_chooseType=${!ANSWER};
+}
+
+
+#获取中心主机ip地址
+centerHostIp=$(cat $prj_dir_path/centerhost|awk 'NR==1'|sed 's/\r//g')
+#echo "center hostIp：$centerHostIp"
+
+#获取所有主机ip地址
+getHostIpList
+while(true)
+do
+#目标主机Ip地址
+echo "all hosts:"
+chooseType $ret_hostIplist;
+targetHostIp=$ret_chooseType
+echo "user choose hosts [$targetHostIp]"
+if ping -c 3 $targetHostIp > /dev/null
+then
+	echo "$targetHostIp ping success"
+else
+	echo "$targetHostIp ping fail"
+exit -1
+fi
+
+#目标主机服务名称
+echo "all war packs:"
+chooseType $ConfigInfoList;
+targetwarname="$ret_chooseType"
+
+echo "user choose warname [ $targetwarname ]"
+username="root"
+echo "[ $username ]" 
+copy1(){
+	scp $prj_dir_path/javaWar/war_modify/socketio-jwzh.war $1@$2:$3
+	scp $prj_dir_path/javaWar/war_modify/jwzh.war $1@$2:$3
+	scp $prj_dir_path/javaWar/war_modify/background.war $1@$2:$3
+}
+
+copy2(){
+	scp $prj_dir_path/javaWar/war_modify/javaCms.war $1@$2:$3
+	scp $prj_dir_path/javaWar/war_modify/mq-jwzh.war $1@$2:$3
+}
+
+copy3(){
+	scp $prj_dir_path/javaWar/war_modify/stream-loadbalance-jwzh.war $1@$2:$3
+	scp $prj_dir_path/javaWar/war_modify/vod-loadbalance-jwzh.war $1@$2:$3
+}
+
+#授权
+chmod a+x $prj_dir_path/javaWar/*.sh
+#调用服务的shell脚本
+ssh $username@$targetHostIp "docker stop tomcat"
+source $prj_dir_path/javaWar/ConfigExtract.sh $prj_dir_path $targetwarname
+source $prj_dir_path/javaWar/ConfigModify.sh $prj_dir_path $targetwarname $targetHostIp
+source $prj_dir_path/javaWar/ConfigReplace.sh $prj_dir_path $targetwarname
+ssh $username@$targetHostIp 'shopt -s extglob;rm -rf !\(*.war\)'
+
+choose=$targetwarname
+if [ $choose == "socketio-jwzh/jwzh/background" ]
+then
+	copy1 $username $targetHostIp $tomcat_dir
+elif [ $choose == "javaCms/mq-jwzh" ]
+then
+	copy2 $username $targetHostIp $tomcat_dir
+elif [ $choose == "stream-loadbalance-jwzh/vod-loadbalance-jwzh" ]
+then
+	copy3 $username $targetHostIp $tomcat_dir
+elif [ $choose == "Exit" ]
+then
+	break
+elif [ $choose == "All" ]
+then
+    copy1 $username $targetHostIp $tomcat_dir
+	copy2 $username $targetHostIp $tomcat_dir
+	copy3 $username $targetHostIp $tomcat_dir
+	break
+else
+    echo "wrong choice"
+fi
+done
+
+ssh $username@$targetHostIp "docker start tomcat"

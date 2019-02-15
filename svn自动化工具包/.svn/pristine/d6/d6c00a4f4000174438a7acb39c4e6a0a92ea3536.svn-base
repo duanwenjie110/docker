@@ -1,0 +1,14 @@
+﻿#配置
+rabbitmq.host=192.168.3.241
+
+#管理员权限账号
+rabbitmq.username_admin=admin
+rabbitmq.password_admin=admin
+rabbitmq.port=5672
+rabbitmq.exchangeName=jwzh
+rabbitmq.vhost=/vhost_jwzh
+rabbitmq.connection.timeout=5000
+
+cms.ip=192.168.3.241
+cms.port=40001
+

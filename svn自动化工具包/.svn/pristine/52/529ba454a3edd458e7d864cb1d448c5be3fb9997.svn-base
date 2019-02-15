@@ -1,0 +1,18 @@
+# base image
+FROM freeswitchenv:V1.0.0H1.0.0
+
+# MAINTAINER
+MAINTAINER hxie@wtoe.cn
+
+# put freeswitch-1.6.18.tar.bz2 into /usr/local/ and unpack freeswitch
+ADD freeswitch-1.6.18.tar.bz2 /usr/local/
+
+ENV PATH /usr/local/freeswitch/bin:/etc/:$PATH
+
+# change dir
+WORKDIR /usr/local/freeswitch/bin
+
+#
+
+# execute command when container exec
+ENTRYPOINT ["freeswitch"]

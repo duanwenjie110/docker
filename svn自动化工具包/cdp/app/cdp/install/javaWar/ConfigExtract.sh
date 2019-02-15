@@ -1,0 +1,272 @@
+#!/bin/bash
+#这是从war包提取配置文件的脚本
+cfg_bkup="config"
+#war包地址，注意与$path配合
+new_warfile="war"
+web_inf="WEB-INF"
+classes="classes"
+stat="static"
+cfg="config.js"
+j=".jar"
+war=".war"
+warpack=(0 background javaCms jwzh mq-jwzh socketio-jwzh stream-loadbalance-jwzh vod-loadbalance-jwzh view-jwzh solr)
+if [ $3 == 1 ] 
+then
+new_warfile="war_Backup"
+fi
+
+path=$1/javaWar
+#path=`pwd`
+cd $path
+#创建config文件夹，存放提取出来的配置文件
+mkdir -p config
+cd config
+
+#检查命令是否正确执行
+checkFunctions (){
+if [ $? -ne 0 ] 
+then
+	echo "comand execute fail"
+	exit	
+fi
+}
+
+#检查war包是否存在
+checkWarExsit (){
+if [  -e $path/$new_warfile/$1 ]
+then
+echo " "
+else
+echo "$1 not exist, please check"
+exit	
+fi
+}
+
+back_up1(){
+#备份background
+	checkWarExsit ${warpack[1]}$war
+   if [ -e $path/$new_warfile/${warpack[1]}$war ];then
+       #创建临时文件夹存放解压出来的文件
+        mkdir -p ${warpack[1]}
+        mkdir -p ${warpack[1]}/server-background-1.0.0.1
+        mkdir -p ${warpack[1]}/server-common-1.0.0.1		
+		
+		#解压war包
+		unzip -o $path/$new_warfile/${warpack[1]}$war  -d $path/$new_warfile/${warpack[1]}
+		#解压jar包
+        unzip -o $path/$new_warfile/${warpack[1]}/$web_inf/lib/server-background-1.0.0.1$j  -d  $path/$new_warfile/${warpack[1]}/$web_inf/lib/server-background-1.0.0.1
+        unzip -o $path/$new_warfile/${warpack[1]}/$web_inf/lib/server-common-1.0.0.1$j  -d  $path/$new_warfile/${warpack[1]}/$web_inf/lib/server-common-1.0.0.1		
+		
+		#复制配置文件
+		\cp -arf $path/$new_warfile/${warpack[1]}/$web_inf/lib/server-background-1.0.0.1/*.properties $path/$cfg_bkup/${warpack[1]}/server-background-1.0.0.1/
+		\cp -arf $path/$new_warfile/${warpack[1]}/$web_inf/lib/server-common-1.0.0.1/*.properties $path/$cfg_bkup/${warpack[1]}/server-common-1.0.0.1/
+		
+		#删除临时文件夹
+     	rm -rf $path/$new_warfile/${warpack[1]}/$web_inf/lib/server-background-1.0.0.1
+        rm -rf $path/$new_warfile/${warpack[1]}/$web_inf/lib/server-common-1.0.0.1
+		rm -rf $path/$new_warfile/${warpack[1]}
+   fi
+   }
+   
+  back_up2(){
+#备份javaCms
+   checkWarExsit ${warpack[2]}$war
+   if [ -e $path/$new_warfile/${warpack[2]}$war ];then
+      #创建临时文件夹存放解压出来的文件
+        mkdir -p ${warpack[2]}
+		#解压war包
+		unzip -o $path/$new_warfile/${warpack[2]}$war  -d $path/$new_warfile/${warpack[2]}
+		#复制配置文件
+	    \cp -arf $path/$new_warfile/${warpack[2]}/$web_inf/$classes/cms.properties $path/$cfg_bkup/${warpack[2]}/
+		#删除临时文件夹
+		rm -rf $path/$new_warfile/${warpack[2]}
+   fi
+ }
+ 
+ back_up3(){
+#备份jwzh
+   checkWarExsit ${warpack[3]}$war
+   if [ -e $path/$new_warfile/${warpack[3]}$war ];then
+       #创建临时文件夹存放解压出来的文件
+        mkdir -p ${warpack[3]}
+        mkdir -p jwzh/server-jwzh-1.0.0.1 jwzh/static
+		mkdir -p jwzh/server-common-1.0.0.1
+		
+		#解压war包
+		unzip -o $path/$new_warfile/${warpack[3]}$war  -d $path/$new_warfile/${warpack[3]}
+		#解压jar包
+		unzip -o $path/$new_warfile/${warpack[3]}/$web_inf/lib/server-jwzh-1.0.0.1$j  -d  $path/$new_warfile/${warpack[3]}/$web_inf/lib/server-jwzh-1.0.0.1
+		unzip -o $path/$new_warfile/${warpack[3]}/$web_inf/lib/server-common-1.0.0.1$j  -d  $path/$new_warfile/${warpack[3]}/$web_inf/lib/server-common-1.0.0.1		
+		
+		#复制配置文件
+		\cp -arf $path/$new_warfile/${warpack[3]}/$web_inf/lib/server-jwzh-1.0.0.1/*.properties $path/$cfg_bkup/${warpack[3]}/server-jwzh-1.0.0.1/
+		\cp -arf $path/$new_warfile/${warpack[3]}/$web_inf/lib/server-common-1.0.0.1/*.properties $path/$cfg_bkup/${warpack[3]}/server-common-1.0.0.1/		
+		
+		#删除临时文件夹
+        rm -rf $path/$new_warfile/${warpack[3]}/$web_inf/lib/server-jwzh-1.0.0.1
+        rm -rf $path/$new_warfile/${warpack[3]}/$web_inf/lib/server-common-1.0.0.1
+		
+		#复制配置文件
+        \cp -arf $path/$new_warfile/${warpack[3]}/$stat/config.js $path/$cfg_bkup/${warpack[3]}/$stat/
+		
+		#删除临时文件夹
+		rm -rf $path/$new_warfile/${warpack[3]}
+   fi
+ }
+ 
+ back_up4(){
+#备份mq-jwzh
+	checkWarExsit ${warpack[4]}$war
+   if [ -e $path/$new_warfile/${warpack[4]}$war ];then
+      #创建临时文件夹存放解压出来的文件
+        mkdir -p ${warpack[4]}
+		#解压war包
+		unzip -o $path/$new_warfile/${warpack[4]}$war  -d $path/$new_warfile/${warpack[4]}
+		#复制配置文件
+        \cp -arf $path/$new_warfile/${warpack[4]}/$web_inf/$classes/*.properties $path/$cfg_bkup/${warpack[4]}/
+		#删除临时文件夹
+		rm -rf $path/$new_warfile/${warpack[4]}
+   fi
+ }
+ 
+ back_up5(){
+#备份socketio-jwzh
+	checkWarExsit${warpack[5]}$war
+   if [ -e $path/$new_warfile/${warpack[5]}$war ];then
+       #创建临时文件夹存放解压出来的文件
+        mkdir -p ${warpack[5]}
+		#解压war包
+		unzip -o $path/$new_warfile/${warpack[5]}$war  -d $path/$new_warfile/${warpack[5]}
+		#复制配置文件
+		\cp -arf $path/$new_warfile/${warpack[5]}/$web_inf/$classes/websocket.properties $path/$cfg_bkup/${warpack[5]}/
+		#删除临时文件夹
+		rm -rf $path/$new_warfile/${warpack[5]}
+   fi
+}	
+
+back_up6(){
+#备份stream-loadbalance-jwzh
+	checkWarExsit ${warpack[6]}$war
+   if [ -e $path/$new_warfile/${warpack[6]}$war ];then
+       #创建临时文件夹存放解压出来的文件
+        mkdir -p ${warpack[6]}
+		#解压war包
+		unzip -o $path/$new_warfile/${warpack[6]}$war  -d $path/$new_warfile/${warpack[6]}
+		#复制配置文件
+        \cp -arf $path/$new_warfile/${warpack[6]}/$web_inf/$classes/*.properties $path/$cfg_bkup/${warpack[6]}/
+		#删除临时文件夹
+		rm -rf $path/$new_warfile/${warpack[6]}
+   fi
+ }
+ back_up7(){
+#备份vod-loadbalance-jwzh
+#暂无配置文件需要备份
+	checkWarExsit ${warpack[7]}$war
+   if [ -e $path/$new_warfile/${warpack[7]}$war ];then
+       mkdir -p ${warpack[7]}
+   fi
+}
+
+ back_up8(){
+#备份view-jwzh
+#暂无配置文件需要备份
+	checkWarExsit ${warpack[8]}$war
+   if [ -e $path/$new_warfile/${warpack[8]}$war ];then
+       mkdir -p ${warpack[8]}
+   fi
+}
+
+ back_up9(){
+#备份solr
+#暂无配置文件需要备份
+	checkWarExsit ${warpack[9]}$war
+   if [ -e $path/$new_warfile/${warpack[9]}$war ];then
+       #创建临时文件夹存放解压出来的文件
+        mkdir -p ${warpack[9]}
+		#解压war包
+		unzip -o $path/$new_warfile/${warpack[9]}$war  -d $path/$new_warfile/${warpack[9]}
+		#复制配置文件
+		\cp -arf $path/$new_warfile/${warpack[9]}/solr-home/jwzhMap/conf/data-config.xml $path/$cfg_bkup/${warpack[9]}/
+		#删除临时文件夹
+		rm -rf $path/$new_warfile/${warpack[9]}
+   fi
+}
+
+ back_up10(){
+	back_up1
+	checkFunctions
+	back_up2
+	checkFunctions
+	back_up3
+	checkFunctions
+	back_up4
+	checkFunctions
+	back_up5
+	checkFunctions
+	back_up6
+	checkFunctions
+	back_up7
+	checkFunctions
+	back_up8
+	checkFunctions
+	back_up9
+	checkFunctions
+ }
+
+choice=$2;
+if [[ $choice == "stream-loadbalance-jwzh/vod-loadbalance-jwzh" ]];then
+	back_up6
+	checkFunctions
+	back_up7
+	checkFunctions
+elif [[ $choice == "javaCms/mq-jwzh" ]];then
+	back_up2
+	checkFunctions
+	back_up4
+	checkFunctions
+elif [[ $choice == "socketio-jwzh/jwzh/background/view-jwzh" ]];then
+	back_up1
+	checkFunctions
+	back_up3	
+	checkFunctions
+	back_up5
+	checkFunctions
+	back_up8
+	checkFunctions
+elif [[ $choice == "All" ]];then
+	back_up10
+	checkFunctions
+elif [[ $choice == "background.war" ]];then
+	back_up1
+	checkFunctions
+elif [[ $choice == "javaCms.war" ]];then
+	back_up2
+	checkFunctions
+elif [[ $choice == "jwzh.war" ]];then
+	back_up3
+	checkFunctions
+elif [[ $choice == "mq-jwzh.war" ]];then
+	back_up4
+	checkFunctions
+elif [[ $choice == "socketio-jwzh.war" ]];then
+	back_up5
+	checkFunctions
+elif [[ $choice == "stream-loadbalance-jwzh.war" ]];then
+	back_up6
+	checkFunctions
+elif [[ $choice == "vod-loadbalance-jwzh.war" ]];then
+	back_up7
+	checkFunctions
+elif [[ $choice == "view-jwzh.war" ]];then
+	back_up8
+	checkFunctions
+elif [[ $choice == "solr" ]];then
+	back_up9
+	checkFunctions
+elif [[ $choice == "solr.war" ]];then
+	back_up9
+	checkFunctions
+else
+	echo " "
+fi
+

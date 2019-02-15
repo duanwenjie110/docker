@@ -1,0 +1,191 @@
+#!/bin/bash
+war=".war"
+war1="background"
+war2="javaCms"
+war3="jwzh"
+war4="mq-jwzh"
+war5="socketio-jwzh"
+war6="stream-loadbalance-jwzh"
+war7="vod-loadbalance-jwzh"
+cfg_bkup="config"
+warfile="war"
+new_warfile="war_modify"
+web_inf="WEB-INF"
+classes="classes"
+stat="static"
+cfg="config.js"
+j=".jar"
+warpack=(0 $war1 $war2 $war3 $war4 $war5 $war6 $war7)
+path=$1/javaWar
+
+#检查命令是否正确执行
+checkFunctions (){
+if [ $? -ne 0 ] 
+then
+	echo "comand execute fail"
+	exit	
+fi
+}
+
+#处理除了backgound和jwzh以外的war包
+funcwar1(){
+	echo ${warpack[$1]}
+	#创建文件夹，用作临时存放解压的文件。必须先创建，否则unzip会失败。下同
+	mkdir -p $path/$new_warfile/${warpack[$1]}
+	#解压war包
+	unzip -o $path/$warfile/${warpack[$1]}$war -d $path/$new_warfile/${warpack[$1]}
+	
+	#如果不等于7，即不是选择vod-loadbalance-jwzh，就需要替换配置文件
+	if [ $1 -ne 7 ]
+	then
+		#替换配置文件
+		cp -arf $path/$cfg_bkup/${warpack[$1]}/* $path/$new_warfile/${warpack[$1]}/$web_inf/$classes
+	fi
+	cd $path/$new_warfile/${warpack[$1]}
+	#重新压缩成war包
+	zip -qr ${warpack[$1]}$war ./*
+	#移动到上一层
+	mv ${warpack[$1]}$war ../
+	cd ..
+	#删除临时文件夹
+	rm -rf ${warpack[$1]}
+}
+
+#处理background
+funcwar(){
+	#创建文件夹，用作临时存放解压的文件
+	mkdir -p $path/$new_warfile/$war1/$web_inf/lib/server-background-1.0.0.1
+	mkdir -p $path/$new_warfile/$war1/$web_inf/lib/server-common-1.0.0.1
+	#解压war包
+	unzip $path/$warfile/$war1$war -d $path/$new_warfile/$war1
+	#解压jar包
+	unzip $path/$new_warfile/$war1/$web_inf/lib/server-background-1.0.0.1$j  -d  $path/$new_warfile/$war1/$web_inf/lib/server-background-1.0.0.1
+	unzip $path/$new_warfile/$war1/$web_inf/lib/server-common-1.0.0.1$j  -d  $path/$new_warfile/$war1/$web_inf/lib/server-common-1.0.0.1
+	
+	#替换配置文件
+	cp -arf $path/$cfg_bkup/$war1/server-background-1.0.0.1/* $path/$new_warfile/$war1/$web_inf/lib/server-background-1.0.0.1/
+	cp -arf $path/$cfg_bkup/$war1/server-common-1.0.0.1/* $path/$new_warfile/$war1/$web_inf/lib/server-common-1.0.0.1/
+	
+	#删除原来的jar
+	rm -rf $path/$new_warfile/$war1/$web_inf/lib/server-background-1.0.0.1$j
+	rm -rf $path/$new_warfile/$war1/$web_inf/lib/server-common-1.0.0.1$j
+	
+	cd $path/$new_warfile/$war1/$web_inf/lib/server-background-1.0.0.1
+	#重新压缩成jar包
+	zip -qr server-background-1.0.0.1$j ./*
+	mv server-background-1.0.0.1$j ../
+	rm -rf $path/$new_warfile/$war1/$web_inf/lib/server-background-1.0.0.1
+	
+	cd $path/$new_warfile/$war1/$web_inf/lib/server-common-1.0.0.1
+	#重新压缩成jar包
+	zip -qr server-common-1.0.0.1$j ./*
+	mv server-common-1.0.0.1$j ../
+	rm -rf $path/$new_warfile/$war1/$web_inf/lib/server-common-1.0.0.1
+	
+	cd $path/$new_warfile/$war1
+	#重新压缩成war包
+	zip -qr $war1$war ./*
+	mv $war1$war ../
+	cd ..
+	rm -rf $war1
+}
+
+
+#处理jwzh.war
+
+funcwar3(){
+	#创建文件夹，用作临时存放解压的文件
+	mkdir -p $path/$new_warfile/$war3/$web_inf/lib/server-jwzh-1.0.0.1
+	mkdir -p $path/$new_warfile/$war3/$web_inf/lib/server-common-1.0.0.1
+	
+	#解压war包
+	unzip $path/$warfile/$war3$war -d $path/$new_warfile/$war3
+	
+	#替换配置文件
+	cp -arf $path/$cfg_bkup/$war3/$stat/* $path/$new_warfile/$war3/$stat/
+
+	#解压jar包
+	unzip $path/$new_warfile/$war3/$web_inf/lib/server-jwzh-1.0.0.1$j  -d  $path/$new_warfile/$war3/$web_inf/lib/server-jwzh-1.0.0.1
+	unzip $path/$new_warfile/$war3/$web_inf/lib/server-common-1.0.0.1$j  -d  $path/$new_warfile/$war3/$web_inf/lib/server-common-1.0.0.1
+
+	#替换配置文件
+	cp -arf $path/$cfg_bkup/$war3/server-jwzh-1.0.0.1/* $path/$new_warfile/$war3/$web_inf/lib/server-jwzh-1.0.0.1/
+	cp -arf $path/$cfg_bkup/$war3/server-common-1.0.0.1/* $path/$new_warfile/$war3/$web_inf/lib/server-common-1.0.0.1/
+
+	#原来的jar
+	rm -rf $path/$new_warfile/$war3/$web_inf/lib/server-jwzh-1.0.0.1$j
+	rm -rf $path/$new_warfile/$war3/$web_inf/lib/server-common-1.0.0.1$j
+
+	cd $path/$new_warfile/$war3/$web_inf/lib/server-jwzh-1.0.0.1
+	#重新压缩成jar包
+	zip -qr server-jwzh-1.0.0.1$j ./*
+	mv server-jwzh-1.0.0.1$j ../
+	rm -rf $path/$new_warfile/$war3/$web_inf/lib/server-jwzh-1.0.0.1
+
+	cd $path/$new_warfile/$war3/$web_inf/lib/server-common-1.0.0.1
+	#重新压缩成jar包
+	zip -qr server-common-1.0.0.1$j ./*
+	mv server-common-1.0.0.1$j ../
+	rm -rf $path/$new_warfile/$war3/$web_inf/lib/server-common-1.0.0.1
+
+	cd $path/$new_warfile/$war3
+	#重新压缩成war包
+	zip -qr $war3$war ./*
+	mv $war3$war ../
+	cd ..
+	rm -rf $war3
+}
+
+
+funcwar8(){
+    funcwar
+	checkFunctions
+    funcwar1 2
+	checkFunctions
+    funcwar3
+	checkFunctions
+    funcwar1 4
+	checkFunctions
+    funcwar1 5
+	checkFunctions
+    funcwar1 6
+	checkFunctions
+    funcwar1 7
+	checkFunctions
+}
+
+choose=$2
+if [ $choose == "socketio-jwzh/jwzh/background" ]
+then
+    funcwar
+	checkFunctions
+	funcwar3
+	checkFunctions
+	funcwar1 5
+	checkFunctions
+elif [ $choose == "javaCms/mq-jwzh" ]
+then
+	funcwar1 2
+	checkFunctions
+	funcwar1 4
+	checkFunctions
+elif [ $choose == "stream-loadbalance-jwzh/vod-loadbalance-jwzh" ]
+then
+    funcwar1 6
+	checkFunctions
+	funcwar1 7
+	checkFunctions
+elif [ $choose == "All" ]
+then
+    funcwar8
+	checkFunctions
+elif [ $choose == 0 ]
+then
+    echo "quit modify"
+    exit
+else
+    echo ""
+fi
+
+#basepath=$path/$new_warfile
+#echo "modify war path [ $basepath ]"

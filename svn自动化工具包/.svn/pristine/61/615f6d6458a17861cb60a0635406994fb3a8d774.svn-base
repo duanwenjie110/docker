@@ -1,0 +1,144 @@
+#!/bin/bash
+
+#set -xv
+checkExist(){
+	if [[ -z $1 ]] || [[ -z $2 ]]
+	then echo "--------------------------------$3 ip or port is not found, please check and retry----------------------------"
+	exit
+	fi
+}
+stty erase ^H
+path=$1
+choice=$2
+tgtIp=$3
+prj_dir_path=${path}
+dest_config_path=$path/javaWar/config
+
+choice2(){
+	ip=`cat $prj_dir_path/warConfigInfo.ini|grep "load-balance"|awk -F " " '{print $2}' |sed 's/ip=//g'`
+	port=`cat $prj_dir_path/warConfigInfo.ini|grep "load-balance"|awk -F " " '{print $3}' |sed 's/port=//g'`
+	checkExist "$ip" "$port" "load-balance"
+	echo $ip
+	echo $port
+	sed -ri "/load.balanc.ip=/s/(load.balanc.ip=)[^ ]+()/\1$ip\2\r/; /load.balanc.port=/s/(load.balanc.port=)[^ ]+()/\1$port\2\r/" $dest_config_path/jwzh/*/load-balanc.properties
+	
+	ip=`cat $prj_dir_path/warConfigInfo.ini|grep "config.js"|awk -F " " '{print $2}' |sed 's/ip=//g'`
+	port=`cat $prj_dir_path/warConfigInfo.ini|grep "config.js"|awk -F " " '{print $3}' |sed 's/port=//g'`
+	checkExist "$ip" "$port" "config.js"
+	echo $ip
+	echo $port
+	sed -ri "/http:\/\//s/(http:\/\/)[^ ]+()/\1$ip:$port\2\'\r/" $dest_config_path/jwzh/*/config.js
+	
+	ip=`cat $prj_dir_path/warConfigInfo.ini|grep "socket-io-websocket"|awk -F " " '{print $2}' |sed 's/ip=//g'`
+	port=`cat $prj_dir_path/warConfigInfo.ini|grep "socket-io-websocket"|awk -F " " '{print $3}' |sed 's/port=//g'`
+	checkExist "$ip" "$port" "socket-io-websocket"
+	echo $ip
+	echo $port
+	sed -ri "/websocket.host=/s/(websocket.host=)[^ ]+()/\1$ip\2\r/; /websocket.port=/s/(websocket.port=)[^ ]+()/\1$port\2\r/" $dest_config_path/*/websocket.properties
+	
+	ip=`cat $prj_dir_path/warConfigInfo.ini|grep "jwzh-websocket"|awk -F " " '{print $2}' |sed 's/ip=//g'`
+	port=`cat $prj_dir_path/warConfigInfo.ini|grep "jwzh-websocket"|awk -F " " '{print $3}' |sed 's/port=//g'`
+	checkExist "$ip" "$port" "jwzh-websocket"
+	echo $ip
+	echo $port
+	sed -ri "/websocket.request.host=/s/(websocket.request.host=)[^ ]+()/\1$ip\2\r/; /websocket.request.port=/s/(websocket.request.port=)[^ ]+()/\1$port\2\r/" $dest_config_path/*/*/websocket.properties
+}
+
+choice3(){
+	ip=`cat $prj_dir_path/warConfigInfo.ini|grep "mysql"|awk -F " " '{print $2}' |sed 's/ip=//g'`
+	port=`cat $prj_dir_path/warConfigInfo.ini|grep "mysql"|awk -F " " '{print $3}' |sed 's/port=//g'`
+
+	checkExist "$ip" "$port" "mysql"
+	echo $ip
+	echo $port
+
+	sed -ri "/mysql:\/\//s/(mysql:\/\/)[^ ]+(\/.*)/\1$ip\2/; /mysql:\/\//s/(mysql:\/\/)[^ ]+(\/.*)/\1$ip\2/" $dest_config_path/*/*/db.properties
+	sed -ri "/mysql:\/\//s/(mysql:\/\/)[^ ]+(\/.*)/\1$ip\2/; /mysql:\/\//s/(mysql:\/\/)[^ ]+(\/.*)/\1$ip\2/" $dest_config_path/*/db.properties
+
+	ip=`cat $prj_dir_path/warConfigInfo.ini|grep "gridfs-nginx"|awk -F " " '{print $2}' |sed 's/ip=//g'`
+	port=`cat $prj_dir_path/warConfigInfo.ini|grep "gridfs-nginx"|awk -F " " '{print $3}' |sed 's/port=//g'`
+	checkExist "$ip" "$port" "gridfs-nginx"
+	echo $ip
+	echo $port
+	sed -ri "/gridfs.nginx.host=/s/(gridfs.nginx.host=)[^ ]+()/\1$ip\2\r/; /gridfs.nginx.port=/s/(gridfs.nginx.port=)[^ ]+()/\1$port\2\r/" $dest_config_path/*/*/gridfs-nginx.properties
+
+	ip=`cat $prj_dir_path/warConfigInfo.ini|grep "mongodb"|awk -F " " '{print $2}' |sed 's/ip=//g'`
+	port=`cat $prj_dir_path/warConfigInfo.ini|grep "mongodb"|awk -F " " '{print $3}' |sed 's/port=//g'`
+	checkExist "$ip" "$port" "mongodb"
+	echo $ip
+	echo $port
+	sed -ri "/mongo.host=/s/(mongo.host=)[^ ]+()/\1$ip\2\r/; /mongo.port=/s/(mongo.port=)[^ ]+()/\1$port\2\r/" $dest_config_path/*/*/mongodb.properties
+
+	ip=`cat $prj_dir_path/warConfigInfo.ini|grep "rabbitmq"|awk -F " " '{print $2}' |sed 's/ip=//g'`
+	port=`cat $prj_dir_path/warConfigInfo.ini|grep "rabbitmq"|awk -F " " '{print $3}' |sed 's/port=//g'`
+	checkExist "$ip" "$port" "rabbitmq"
+	echo $ip
+	echo $port
+	sed -ri "/rabbitmq.host=/s/(rabbitmq.host=)[^ ]+()/\1$ip\2\r/; /rabbitmq.port=/s/(rabbitmq.port=)[^ ]+()/\1$port\2\r/" $dest_config_path/*/rabbitmq.properties
+	sed -ri "/rabbitmq.host=/s/(rabbitmq.host=)[^ ]+()/\1$ip\2\r/" $dest_config_path/*/cms.properties
+	sed -ri "/rabbitmq.host=/s/(rabbitmq.host=)[^ ]+()/\1$ip\2\r/; /rabbitmq.port=/s/(rabbitmq.port=)[^ ]+()/\1$port\2\r/" $dest_config_path/*/*/rabbitmq.properties
+
+	ip=`cat $prj_dir_path/warConfigInfo.ini|grep "redis"|awk -F " " '{print $2}' |sed 's/ip=//g'`
+	port=`cat $prj_dir_path/warConfigInfo.ini|grep "redis"|awk -F " " '{print $3}' |sed 's/port=//g'`
+	checkExist "$ip" "$port" "redis"
+	echo $ip
+	echo $port
+	sed -ri "/redis.host=/s/(redis.host=)[^ ]+()/\1$ip\2\r/; /redis.port=/s/(redis.port=)[^ ]+()/\1$port\2\r/" $dest_config_path/*/redis*.properties
+	sed -ri "/spring.redis.host=/s/(spring.redis.host=)[^ ]+()/\1$ip\2\r/; /spring.redis.port=/s/(spring.redis.port=)[^ ]+()/\1$port\2\r/" $dest_config_path/*/*/redis.properties
+
+	ip=`cat $prj_dir_path/warConfigInfo.ini|grep "cms"|awk -F " " '{print $2}' |sed 's/ip=//g'`
+	port=`cat $prj_dir_path/warConfigInfo.ini|grep "cms"|awk -F " " '{print $3}' |sed 's/port=//g'`
+	checkExist "$ip" "$port" "cms"
+	echo $ip
+	echo $port
+	sed -ri "/cms.ip=/s/(cms.ip=)[^ ]+()/\1$ip\2\r/; /cms.port=/s/(cms.port=)[^ ]+()/\1$port\2\r/" $dest_config_path/*/cms.properties
+}
+
+if [[ $choice == "stream-loadbalance-jwzh/vod-loadbalance-jwzh" ]];then
+	sed -i "/load-balance/d" $prj_dir_path/warConfigInfo.ini
+	sed -i '$a\load-balance: ip='"$tgtIp"' port=9092' $prj_dir_path/warConfigInfo.ini
+	choice3
+	
+elif [[ $choice == "javaCms/mq-jwzh" ]];then
+	choice3
+elif [[ $choice == "socketio-jwzh/jwzh/background" ]];then
+	sed -i "/config.js/d" $prj_dir_path/warConfigInfo.ini
+	sed -i '$a\config.js: ip='"$tgtIp"' port=9092' $prj_dir_path/warConfigInfo.ini
+	
+	sed -i "/socket-io-websocket/d" $prj_dir_path/warConfigInfo.ini
+	sed -i '$a\socket-io-websocket: ip='"$tgtIp"' port=9092' $prj_dir_path/warConfigInfo.ini
+	
+	sed -i "/jwzh-websocket/d" $prj_dir_path/warConfigInfo.ini
+	sed -i '$a\jwzh-websocket: ip='"$tgtIp"' port=8080' $prj_dir_path/warConfigInfo.ini
+	choice2
+	choice3
+elif [[ $choice == "All" ]];then
+	sed -i "/load-balance/d" $prj_dir_path/warConfigInfo.ini
+	sed -i '$a\load-balance: ip='"$tgtIp"' port=9092' $prj_dir_path/warConfigInfo.ini
+	
+	sed -i "/config.js/d" $prj_dir_path/warConfigInfo.ini
+	sed -i '$a\config.js: ip='"$tgtIp"' port=9092' $prj_dir_path/warConfigInfo.ini
+	
+	sed -i "/socket-io-websocket/d" $prj_dir_path/warConfigInfo.ini
+	sed -i '$a\socket-io-websocket: ip='"$tgtIp"' port=9092' $prj_dir_path/warConfigInfo.ini
+	
+	sed -i "/jwzh-websocket/d" $prj_dir_path/warConfigInfo.ini
+	sed -i '$a\jwzh-websocket: ip='"$tgtIp"' port=8080' $prj_dir_path/warConfigInfo.ini
+	choice2
+	choice3
+else
+	echo ""
+fi
+
+
+
+
+
+
+
+#ip=`cat $prj_dir_path/warConfigInfo.ini|grep "face"|awk -F " " '{print $2}' |sed 's/ip=//g'`
+#port=`cat $prj_dir_path/warConfigInfo.ini|grep "face"|awk -F " " '{print $3}' |sed 's/port=//g'`
+#checkExist "$ip" "$port" "face"
+#echo $ip
+#echo $port
+#ed -ri "/face.host=/s/(face.host=)[^ ]+()/\1$ip\2\r/; /face.port=/s/(face.port=)[^ ]+()/\1$port\2\r/"  $dest_config_path/*/*/face.properties

@@ -1,0 +1,4 @@
+CREATE USER 'user'@'localhost' IDENTIFIED BY '123456';
+GRANT ALL PRIVILEGES ON *.* TO 'user'@'%' IDENTIFIED BY '123456' WITH GRANT OPTION;
+flush privileges;
+

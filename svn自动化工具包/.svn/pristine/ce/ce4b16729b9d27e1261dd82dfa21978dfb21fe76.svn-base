@@ -1,0 +1,109 @@
+#! /bin/bash
+
+parent_dir=`pwd`
+
+#docker images包存放路径
+dockerimg_dir_path="$parent_dir/images"
+registryname="registry-V1.0.0H1.0.0.tar"
+registryVersion="V1.0.0H1.0.0"
+dockerdata_dir_path="/usr/local/docker"
+
+#判断私仓是否已经加载过
+containerIds=`docker ps -aq`
+for container in ${containerIds}
+do
+    containerName=`docker inspect -f {{.Name}} ${container}`
+    if [ $containerName == "/registry" ]
+    then
+        docker stop ${container}
+        docker rm ${container}
+        break
+    fi
+done
+
+#运行docker命令
+echo "registry start to install---------------------------------------------------------------------------------------------------"
+docker load --input $dockerimg_dir_path/$registryname
+docker run -d --net=host -v /etc/localtime:/etc/localtime:ro -v $dockerdata_dir_path/data/registry/:/var/lib/registry/ --name registry --restart=always registry:$registryVersion
+echo "registry install success---------------------------------------------------------------------------------------------------"
+
+echo "start push images to registry---------------------------------------------------------------------------------------------------"
+port=`cat $parent_dir/centerhost|awk 'NR==2'|sed 's/\r//g'`
+echo "center port：$port"
+
+#java的服务版本不会变化，后期有变化再做修订
+javaversion=$(cat version)
+#java镜像存放路径
+javaimages_dir_path="$parent_dir/images/java/"
+#cpp镜像存放路径
+cppimages_dir_path="$parent_dir/images/cpp/"
+
+
+#获取中心主机ip地址
+centerHostIp=`cat $parent_dir/centerhost|awk 'NR==1'|sed 's/\r//g'`
+
+
+echo "center hostIp：$centerHostIp"
+
+#运行load java images 命令
+echo "Run load java images to docker"
+
+cd $javaimages_dir_path
+allJavaImagesTars=`ls`
+for javaimage in ${allJavaImagesTars}
+do
+	if [ "${javaimage##*.}"x = "tar"x ];
+	then
+		echo $javaimage
+		docker load --input $javaimage
+		echo "docker load result = [$?]"
+		javaimagename="${javaimage%-*}"
+		echo "javaimagename : $javaimagename"
+		echo "docker tag $javaimagename:$javaversion $centerHostIp:$port/$javaimagename:$javaversion"
+		docker tag $javaimagename:$javaversion $centerHostIp:$port/$javaimagename:$javaversion
+		echo "docker push $centerHostIp:$port/$javaimagename:$javaversion"
+		docker push $centerHostIp:$port/$javaimagename:$javaversion
+		docker rmi $javaimagename:$javaversion
+	fi
+done
+
+echo "Run load java images done"
+
+
+#运行load cpp images 命令
+echo "Run load cpp images to docker"
+
+cd $cppimages_dir_path
+allCppImagesTars=`ls`
+for cppimage in ${allCppImagesTars}
+do
+	if [ "${cppimage##*.}"x = "tar"x ];
+	then
+		echo $cppimage
+		docker load --input $cppimage
+		echo "docker load result = [$?]"
+	fi
+done
+
+echo "Run load java images done"
+
+#执行dockerfile文件并生成tar包
+dir=$(ls -l $cppimages_dir_path |awk '/^d/ {print $NF}')
+
+
+for i in $dir
+do
+  echo $cppimages_dir_path$i
+  imagesname="$i"
+  typeset -l imagesname
+  cd $cppimages_dir_path$i
+  version=$(cat version)
+  echo "docker build -t $imagesname:$version ."
+  docker build -t $imagesname:$version .
+  docker tag $imagesname:$version $centerHostIp:$port/$imagesname:$version
+  docker push $centerHostIp:$port/$imagesname:$version
+  docker rmi $imagesname:$version
+done  
+
+echo "push images to registry success---------------------------------------------------------------------------------------------------"
+

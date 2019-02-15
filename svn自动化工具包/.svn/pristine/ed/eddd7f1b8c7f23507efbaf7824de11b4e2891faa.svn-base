@@ -1,0 +1,193 @@
+#!/bin/bash
+set -e
+
+errOut()
+{
+    echo "[err] $1 $2 $3 $4 $5 $6 $7 $8 $9"
+}
+
+#check ip 
+checkip()
+{
+    inputorigin="$1"
+    strLen=$(expr length $inputorigin)
+    if [ "$strLen" -gt "15" ] || [ "$strLen" -lt "7" ]
+    then
+        errOut "Wrong ip address,the length of ip address should be less than 15 and more than 7"
+        return 1
+    fi
+    teststring=${inputorigin#*[!0-9.]}
+    if [ "$inputorigin" != "$teststring" ]
+    then
+        errOut "IP address can only contain 0-9 and dot."
+        return 1
+    fi
+    
+    for i in 0 1 2 3
+    do
+        if [ $i = 0 ]
+        then
+            ipval=${inputorigin%%.*}
+            if [ -z "$ipval" ]
+            then
+                errOut "ip0val:$ipval "
+                return 1
+            fi
+            iptmp0=${inputorigin#*.}
+            if [ "$iptmp0" = "$inputorigin" ]
+            then
+                errOut "$ipval error"
+                return 1
+            fi
+            if [ "$ipval" -gt "223" ]
+            then
+                errOut "ip0 is greater than 223 ,$ipval error"
+                return 1
+            elif [ `echo $ipval | grep ^0` ]
+            then
+                errOut "ip0 ,$ipval error"
+                return 1
+            fi
+        elif [ $i = 1 ]
+        then
+            ipval=${iptmp0%%.*}
+            if [ -z "$ipval" ]
+            then
+                errOut "ip1val:$ipval is null"
+                return 1
+            fi
+            iptmp1=${iptmp0#*.}
+            if [ "$iptmp1" = "$iptmp0" ]
+            then
+                errOut "$ipval error"
+                return 1
+            fi
+            if [ "$ipval" -lt "0" ]
+            then
+                errOut "ip1 is smaller than 0 ,$ipval error"
+                return 1
+            elif [ "$ipval" -gt "255" ]
+            then
+                errOut "ip1 is greater than 255 ,$ipval error"
+                return 1
+            elif [ `echo $ipval | grep ^0` ] && [ $(expr length $ipval) -gt 1 ]
+            then
+                errOut "ip1  ,$ipval error"
+                return 1
+            fi
+        elif [ $i = 2 ]
+        then
+            ipval=${iptmp1%%.*}
+            if [ -z "$ipval" ]
+            then
+                errOut "ip2val:$ipval is null"
+                return 1
+            fi
+            iptmp2=${iptmp1#*.}
+            if [ "$iptmp2" = "$iptmp1" ]
+            then
+                errOut "$ipval error"
+                return 1
+            fi
+            if [ "$ipval" -lt "0" ] 
+            then
+                errOut "ip2 is smaller than 0 ,$ipval error"
+                return 1
+            elif [ "$ipval" -gt "255" ]
+            then
+                errOut "ip2 is greater than 255 ,$ipval error"
+                return 1
+            elif [ `echo $ipval | grep ^0` ] && [ $(expr length $ipval) -gt 1 ]
+            then
+                errOut "ip2  $ipval error"
+                return 1
+            fi
+        elif [ $i = 3 ]
+        then
+            ipval=${iptmp2%%.*}
+            if [ -z "$ipval" ]
+            then
+                errOut "ip3val:$ipval is null"
+                return 1
+            fi
+            if [ `echo $iptmp2 | grep [.]` ]
+            then
+                errOut "wrongwrongwrong$inputorigin "
+                return 1
+            fi
+            if [ "$ipval" -lt "0" ]
+            then
+                errOut "ip3 is smaller than 0 ,$ipval error"
+                return 1
+            elif [ "$ipval" -gt "255" ]
+            then
+                errOut "ip3 is great than 255 ,$ipval error"
+                return 1
+            elif [ `echo $ipval | grep ^0` ] && [ $(expr length $ipval) -gt 1 ]
+            then
+                errOut "ip3  ,$ipval error"
+                return 1
+            fi
+        fi
+    done
+    return 0
+}
+
+checkport()
+{
+	local service_port=$1
+	
+    inputorigin="$service_port"
+    teststr=${inputorigin#*[!0-9]}
+    if [ "$inputorigin" != "$teststr" ]
+    then
+        errOut "Port can  only contain 0 to 9."
+        return 1
+    elif [ "$inputorigin" -gt "65535" ]
+    then 
+        errOut "Port number scope: 1025-65535."
+        return 1
+    elif [ "$inputorigin" -lt "1025" ]
+    then 
+        errOut "Port number scope: 1025-65535."
+        return 1
+    elif [ `echo $inputorigin | grep ^0` ]
+        then
+            errOut "$inputorigin error"
+            return 1
+    else
+	    local local_PORT_LINE=`netstat -antop | grep -E ".*$service_ip:$service_port.*"`
+	    if [ ! -z "$local_PORT_LINE" ]
+	    then
+	    	return 1
+	    fi
+    fi
+}
+
+
+if [ "$#" -lt "2" ]
+then
+    echo "Please set server bind ip and port"
+    exit -1
+fi
+
+echo "ip:port $1:$2"
+checkip "$1"
+if [ $? != "0" ]
+then 
+    exit -1
+fi
+
+checkport "$2"
+if [ $? != "0" ]
+then 
+    exit -1
+fi
+
+#debug mode
+if [ $# -ge "3" ] && [ $3 == "debug" ]
+then
+    /bin/bash
+else
+    dsaHkUhd --load=../../config/app/load_decoder.js --port=$1:$2
+fi

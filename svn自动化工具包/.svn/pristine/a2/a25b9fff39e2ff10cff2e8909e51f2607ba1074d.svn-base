@@ -1,0 +1,12 @@
+#中文
+rabbitmq.host=192.168.3.241
+rabbitmq.username_admin=admin
+rabbitmq.password_admin=admin
+rabbitmq.port=5672
+rabbitmq.exchangeName=jwzh
+rabbitmq.vhost=/vhost_jwzh
+rabbitmq.connection.timeout=5000
+ 
+rabbitmq.username_user=user
+rabbitmq.password_user=123456
+ 

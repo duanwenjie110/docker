@@ -1,0 +1,3 @@
+decoderWallAdapter.setLoadLibName("DecoderWallHkBigScreenUhd");
+
+

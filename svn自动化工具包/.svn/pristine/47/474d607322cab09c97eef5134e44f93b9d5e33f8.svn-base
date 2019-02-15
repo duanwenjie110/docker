@@ -1,0 +1,17 @@
+#JDBC Global Setting
+jdbc.driver=com.mysql.jdbc.Driver
+
+jdbc.url=jdbc:mysql://192.168.3.241:3306/wt-sso?useUnicode=true&characterEncoding=utf-8&useSSL=false
+
+jdbc.username=root
+jdbc.password=123456
+ 
+#DataSource Global Setting
+ds.initialSize=2
+ds.minIdle=2
+ds.maxActive=5
+
+ds.maxWait=60000
+ds.timeBetweenEvictionRunsMillis=30000
+ds.minEvictableIdleTimeMillis=30000
+ds.removeAbandonedTimeout=180

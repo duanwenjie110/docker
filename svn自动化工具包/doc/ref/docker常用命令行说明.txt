@@ -1,0 +1,99 @@
+docker run -d -p 5000:5000 -v /home/docker/extra/registry/:/var/lib/registry/ --privileged=true --name registry-ser  --restart=always registry
+
+docker run
+参数
+# -v <宿主机目录>:<容器目录> 将宿主机的目录映射到容器上
+# –privileged=true 给容器加权限，这样上传就不会因为目录权限出错 
+# –restart=always 表示自动启动容器 
+# --restart 标志会检查容器的退出代码，并据此来决定是否要重启容器，默认是不会重启。 
+# --restart的参数说明 
+#   always：无论容器的退出代码是什么，Docker都会自动重启该容器。 
+#   on-failure：只有当容器的退出代码为非0值的时候才会自动重启。
+# 另外，该参数还接受一个可选的重启次数参数，`--restart=on-fialure:5`表示当容器退出代码为非0时，Docker#会尝试自动重启该容器，最多5次。
+-a stdin: 指定标准输入输出内容类型，可选 STDIN/STDOUT/STDERR 三项；
+-d: 后台运行容器，并返回容器ID；
+-i: 以交互模式运行容器，通常与 -t 同时使用；
+-t: 为容器重新分配一个伪输入终端，通常与 -i 同时使用；
+-p: 端口映射，格式为：主机(宿主)端口:容器端口
+--name="nginx-lb": 为容器指定一个名称；
+--dns 8.8.8.8: 指定容器使用的DNS服务器，默认和宿主一致；
+--dns-search example.com: 指定容器DNS搜索域名，默认和宿主一致；
+-h "mars": 指定容器的hostname
+-e username="ritchie": 设置环境变量；
+--env-file=[]: 从指定文件读入环境变量；
+--cpuset="0-2" or --cpuset="0,1,2": 绑定容器到指定CPU运行；
+-m :设置容器使用内存最大值；
+--net="bridge": 指定容器的网络连接类型，支持 bridge/host/none/container: 四种类型；
+--link=[]: 添加链接到另一个容器；
+--expose=[]: 开放一个端口或一组端口；
+--entrypoint="/bin/bash" 取代dockerfile中[entrypoint],做调试用
+
+docker exec -it id /bin/bash 进入容器
+docker attach id 直接进入容器，则需要执行CTRL+p,CTRL+q退出
+
+
+导入save保存的镜像文件
+docker load --input
+docker save 
+docker rmi [container] 容器ID
+
+显示所有镜像
+docker images
+
+显示运行容器
+docker ps
+docker ps -a
+docker ps -a -q
+docker stop [container] 可以是容器ID集合
+docker stop $(docker ps -a -q) 停止所有容器
+docker rm $(docker ps -a -q) 移除所有容器
+docker rmi
+
+
+
+从容器里面拷文件到宿主机
+docker cp 容器名：要拷贝的文件在容器里面的路径  要拷贝到宿主机的相应路径 
+示例： 假设容器名为testtomcat,要从容器里面拷贝的文件路为：/usr/local/tomcat/webapps/test/js/test.js,  现在要将test.js从容器里面拷到宿主机的/opt路径下面，那么命令应该怎么写呢？
+答案：在宿主机上面执行命令
+
+docker cp testtomcat：/usr/local/tomcat/webapps/test/js/test.js /opt
+
+从宿主机拷文件到容器里面
+docker cp 要拷贝的文件路径 容器名：要拷贝到容器里面对应的路径
+示例：假设容器名为testtomcat,现在要将宿主机/opt/test.js文件拷贝到容器里面的/usr/local/tomcat/webapps/test/js路径下面，那么命令该怎么写呢？
+答案：在宿主机上面执行如下命令     
+docker cp /opt/test.js testtomcat：/usr/local/tomcat/webapps/test/js
+不管容器有没有启动，拷贝命令都会生效。
+
+
+
+
+
+保存容器为镜像
+ docker commit 1ae2547f8378 cms:V1.0.0
+导出镜像
+ docker save -o /home/docker/C++/cmsV1.0.0.tar cms
+
+
+----容器端口映射的4中方法--------
+映射指定端口有如下四种格式： 
+- 命令docker run -p 80 -i -t ubuntu /bin/bash仅指定容器端口，这种情况下宿主机的端口是随机映射的； 
+- 命令docker run -p 8080:80 -i -t ubuntu /bin/bash同时指定了宿主机和容器的端口，这样的映射是一一对应的； 
+- 命令docker run -p 0.0.0.0:80 -i -t ubuntu /bin/bash指定了容器的IP地址和端口，宿主机的端口将是随机映射的； 
+- 命令docker run -p 0.0.0.0:8080:80 -i -t ubuntu /bin/bash同时指定了容器的IP地址，宿主机的端口和容器的端口；
+
+
+-----获取镜像信息---
+1、获取仓库类的镜像：
+curl -XGET http://192.168.3.170:5000/v2/_catalog
+
+2、获取某个镜像的标签列表pas
+curl -XGET http://192.168.3.170:5000/v2/centos/tags/list
+
+
+---针对容器状态为Dead容器无法删除解决方法----
+1.grep docker /proc/*/mountinfo
+2.获取进程id
+grep docker /proc/*/mountinfo | grep 8cca97c1b059f8b1afc6392a6fd3051dd9b35b788ff2e72fd602074e464161fd | awk -F':' '{print $1}' | awk -F'/' '{print $3}'
+3.停止进程id，后再删除
+

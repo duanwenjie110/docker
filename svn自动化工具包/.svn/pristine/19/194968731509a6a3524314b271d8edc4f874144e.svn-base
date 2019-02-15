@@ -1,0 +1,10 @@
+mongodb: ip=192.168.3.180 port=27017
+rabbitmq: ip=192.168.3.180 port=5672
+redis: ip=192.168.3.180 port=6379
+cms: ip=192.168.3.180 port=40001
+mysql: ip=192.168.3.180 port=3306
+gridfs-nginx: ip=192.168.3.180 port=33000
+load-balance: ip=192.168.3.180 port=8080
+config: ip=192.168.3.180 port=9092
+socket-io-websocket: ip=192.168.3.180 port=9092
+jwzh-websocket: ip=192.168.3.180 port=8080

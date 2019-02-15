@@ -1,0 +1,229 @@
+#! /bin/bash
+
+#set -xv
+stty erase ^H
+curPwd=`pwd`
+prj_dir_path=${curPwd}
+hostCfg="host"
+serviceCfg="service"
+#仓库端口
+repository_port=`cat $prj_dir_path/centerhost |awk 'NR==2'|sed 's/\r//g'`
+#挂载目录
+tomcat_dir=`cat $prj_dir_path/centerhost |awk 'NR==3'|sed 's/\r//g'`"tomcat/webapps"
+#瓦片临时目录
+tiles_temp_dir=`cat $prj_dir_path/centerhost |awk 'NR==3'|sed 's/\r//g'`"tiles_temp/"
+cfg_path=javaWar/config
+
+ConfigInfoList="stream-loadbalance-jwzh/vod-loadbalance-jwzh socketio-jwzh/jwzh/background javaCms/mq-jwzh server-map All Exit"
+
+#检查命令是否正确执行
+checkFunctions (){
+if [ $? -ne 0 ] 
+then
+	echo "comand execute fail"
+	exit	
+fi
+}
+
+#检查war包是否存在
+checkWarExsit (){
+if [  -e $prj_dir_path/javaWar/war/$1 ]
+then
+echo " "
+else
+echo "$1 not exist, please check"
+exit	
+fi
+}
+
+
+getHostIpList()
+{
+	#获取所有主机Ip地址
+	localHostListIp=`cat ${prj_dir_path}/${hostCfg}|awk '{print $1}'|sed 's/\r//g'`
+	#get host info
+
+	for hostIp in $localHostListIp
+		{
+			if [ -z "$ret_hostIplist" ]
+				then
+					ret_hostIplist="$hostIp"
+				else
+				ret_hostIplist="$ret_hostIplist $hostIp"
+			fi
+		}
+	}
+
+	#将数组的元素生成选择表
+chooseType()
+{
+	index=1
+	while (( "$index" <= $#))
+	do
+		echo "$index.${!index}"
+		let "index++"
+	done
+
+	while :
+	do
+		printf "Please input your choice:"
+		read ANSWER
+		if [ "$ANSWER" = "" ]
+		then
+			ANSWER=1;
+			break
+		fi
+
+		inputType=$ANSWER
+		teststr=${inputType#*[!0-9]}
+		if [ "$inputType" != "$teststr" ]
+		then
+			echo "number can only contain 0 to 9."
+		elif [ "$inputType" -eq "0" ]
+		then
+			echo "number equals to 0, error."
+		elif [ `echo $inputType | grep ^0` ]
+		then
+			echo "number error."
+		elif [ "$inputType" -ge "$index" ]
+		then
+			echo "number is greater than limit."
+		else
+			break
+		fi
+	done
+
+	ret_chooseType=${!ANSWER};
+}
+
+
+#获取中心主机ip地址
+centerHostIp=$(cat $prj_dir_path/centerhost|awk 'NR==1'|sed 's/\r//g')
+#echo "center hostIp：$centerHostIp"
+
+#获取所有主机ip地址
+getHostIpList
+while(true)
+do
+#目标主机Ip地址
+echo "all hosts:"
+chooseType $ret_hostIplist;
+targetHostIp=$ret_chooseType
+echo "user choose hosts [$targetHostIp]"
+if ping -c 3 $targetHostIp > /dev/null
+then
+	echo "$targetHostIp ping success"
+else
+	echo "$targetHostIp ping fail"
+exit -1
+fi
+
+#目标主机服务名称
+echo "all war packs:"
+chooseType $ConfigInfoList;
+targetwarname="$ret_chooseType"
+
+echo "user choose warname [ $targetwarname ]"
+username="root"
+echo "[ $username ]" 
+
+#授权
+chmod a+x $prj_dir_path/javaWar/*.sh
+#获取选择的war包名字
+choose=$targetwarname
+
+#关闭目标主机tomcat
+ssh $username@$targetHostIp "docker stop tomcat"
+checkFunctions
+
+if [ $choose == "server-map" ]
+then
+#删除目标主机下除了.war以外的文件
+ssh $username@$targetHostIp "cd $tomcat_dir;shopt -s extglob;ls |egrep -v .war|xargs rm -rf"
+
+else
+#删除目标主机下除了.war和server-map以外的文件
+ssh $username@$targetHostIp "cd $tomcat_dir;shopt -s extglob;ls |egrep -v server-map|egrep -v .war|xargs rm -rf"
+#调用提取war包配置文件的脚本
+source $prj_dir_path/javaWar/ConfigExtract.sh $prj_dir_path $targetwarname
+#调用修改war包配置文件的脚本
+source $prj_dir_path/javaWar/ConfigModify.sh $prj_dir_path $targetwarname $targetHostIp
+#调用替换war包配置文件的脚本
+source $prj_dir_path/javaWar/ConfigReplace.sh $prj_dir_path $targetwarname
+fi
+
+#复制socketio-jwzh/jwzh/background到目标主机目录
+copy1(){
+	scp $prj_dir_path/javaWar/war_modify/socketio-jwzh.war $1@$2:$3
+	scp $prj_dir_path/javaWar/war_modify/jwzh.war $1@$2:$3
+	scp $prj_dir_path/javaWar/war_modify/background.war $1@$2:$3
+}
+
+#复制javaCms/mq-jwzh到目标主机目录
+copy2(){
+	scp $prj_dir_path/javaWar/war_modify/javaCms.war $1@$2:$3
+	scp $prj_dir_path/javaWar/war_modify/mq-jwzh.war $1@$2:$3
+}
+
+#复制stream-loadbalance-jwzh/vod-loadbalance-jwzh到目标主机目录
+copy3(){
+	scp $prj_dir_path/javaWar/war_modify/stream-loadbalance-jwzh.war $1@$2:$3
+	scp $prj_dir_path/javaWar/war_modify/vod-loadbalance-jwzh.war $1@$2:$3
+}
+
+#判断选择
+if [ $choose == "socketio-jwzh/jwzh/background" ]
+then
+	copy1 $username $targetHostIp $tomcat_dir
+	checkFunctions
+	break
+elif [ $choose == "javaCms/mq-jwzh" ]
+then
+	copy2 $username $targetHostIp $tomcat_dir
+	checkFunctions
+	break
+elif [ $choose == "stream-loadbalance-jwzh/vod-loadbalance-jwzh" ]
+then
+	copy3 $username $targetHostIp $tomcat_dir
+	checkFunctions
+	break
+elif [ $choose == "server-map" ]
+then
+	#检查war包是否存在
+	checkWarExsit server-map.war
+	#复制war包
+	scp $prj_dir_path/javaWar/war/server-map.war $username@$targetHostIp:$tomcat_dir
+	checkFunctions
+	break
+elif [ $choose == "Exit" ]
+then
+    checkExist $prj_dir_path/javaWar/war/server-map.war
+	break
+elif [ $choose == "All" ]
+then
+    copy1 $username $targetHostIp $tomcat_dir
+	checkFunctions
+	copy2 $username $targetHostIp $tomcat_dir
+    checkFunctions
+	copy3 $username $targetHostIp $tomcat_dir
+	checkFunctions
+		#检查war包是否存在
+		if [  -e $prj_dir_path/javaWar/war/server-map.war ]
+		then
+		echo " "
+		else
+		echo "$1 not exist, please check"
+		exit	
+		fi
+   #复制war包
+	scp $prj_dir_path/javaWar/war/server-map.war $username@$targetHostIp:$tomcat_dir
+	checkFunctions
+	break
+else
+    echo "wrong choice"
+fi
+done
+
+#开启动tomca
+ssh $username@$targetHostIp "docker start tomcat"
+checkFunctions

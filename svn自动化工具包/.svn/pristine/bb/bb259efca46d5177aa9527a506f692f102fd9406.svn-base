@@ -1,0 +1,14 @@
+cmsIp:cmsPort
+localUuid
+localIp:localPort
+rtspIp:rtspPort
+100
+rtpPort
+#请保留此注释
+#第一行为连接CMS服务器地址[Ip:Port]
+#第二行为RSS服务器标识
+#第三行为RSS服务器监听的负载均衡业务地址[Ip:Port]
+#第四行为RSS服务器监听的RTSP业务地址[Ip:Port]
+#第五行为RSS服务器负载最大数量
+#第六行为RTP起始端口
+#其他的行,全认为是注释,不读取.

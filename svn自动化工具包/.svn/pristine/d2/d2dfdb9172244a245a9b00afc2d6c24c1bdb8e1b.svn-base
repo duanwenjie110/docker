@@ -1,0 +1,7 @@
+#websocketio消息推送
+#websocket.host=192.168.3.4
+#websocket.port=8080
+
+#websocketio消息推送请求地址 
+websocket.request.host=192.168.3.241
+websocket.request.port=8080

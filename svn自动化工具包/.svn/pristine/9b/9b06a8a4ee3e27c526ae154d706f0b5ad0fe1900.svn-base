@@ -1,0 +1,152 @@
+#! /bin/bash
+parent_dir=`pwd`
+config_dir1="$parent_dir/data/conf/nginx-gridfs/"
+config_dir2="$parent_dir/data/conf/mongodb/"
+
+config1="/conf/nginx.conf"
+config2="/conf/mongodb.conf"
+temp_dir="$parent_dir/temp/pss-temp/"
+temp_dir1="$parent_dir/temp/pss-temp/nginx-gridfs/"
+temp_dir2="$parent_dir/temp/pss-temp/mongodb/"
+
+service_name="pss"
+
+#存放config的远程路径
+s_dir1="$5/nginx-gridfs/"
+s_dir2="$5/mongodb/"
+
+#仓库地址
+repository_addr="$1:$4"
+ip=$2
+user=$3
+
+checkFunctions (){
+if [ $? -ne 0 ] 
+then
+	echo "comond execute fail"
+	exit	
+fi
+}
+stty erase ^H
+echo "validate default port:27017"
+port=27017
+result=$(ssh $user@$ip netstat -an | grep LISTEN | grep -w $port)
+#echo $result
+if [[ $result != *$port*  ]]
+	then
+		echo "$port usable"
+	else
+	echo "$port unusable"
+exit -1
+fi
+
+echo "validate default port:33000"
+port=33000
+result=$(ssh $user@$ip netstat -an | grep LISTEN | grep -w $port)
+if [[ $result != *$port*  ]]
+	then
+		echo "$port usable"
+	else
+	echo "$port unusable"
+exit -1
+fi
+echo "copy temp config files"
+#如果没有temp_dir目录则创建
+if [ ! -d $temp_dir1 ]; then
+	sudo mkdir -p -m 755 $temp_dir1
+	checkFunctions
+	echo "sudo mkdir -p -m 755 ${temp_dir1} done"
+fi
+
+if [ ! -d $temp_dir2 ]; then
+	sudo mkdir -p -m 755 $temp_dir2
+	checkFunctions
+	echo "sudo mkdir -p -m 755 ${temp_dir2} done"
+fi
+
+cp  -arf $config_dir1/* $temp_dir1;
+checkFunctions
+cp  -arf $config_dir2/* $temp_dir2;
+checkFunctions
+echo "copy done"
+
+sed -i "s/"mongoIP"/$ip/g" $temp_dir1/${config1}
+checkFunctions
+sed -i "s/"mongoIP"/$ip/g" $temp_dir2/${config2}
+checkFunctions
+
+echo "Copy config file to $ip"
+echo "Determine whether remote directory exists"
+#read user;
+ssh $user@$ip "if [ ! -d $s_dir1 ]; then
+mkdir -p -m 755 $s_dir1
+echo "mkdir -p -m 755 ${s_dir1} done"
+	else echo "${s_dir1} exists"
+	fi;if [ ! -d $s_dir2 ]; then
+	mkdir -p -m 755 $s_dir2
+echo "mkdir -p -m 755 ${s_dir2} done"
+	else echo "${s_dir2} exists"
+	fi
+	#;if [ ! -d $images_dir ]; then
+	#  mkdir -p -m 755 $images_dir
+#  echo "mkdir -p -m 755 ${images_dir} done"
+	#  else echo "${images_dir} 存在"
+	#fi
+	"
+checkFunctions
+echo "Coping config file"
+scp -r $temp_dir1/* $user@$ip:$s_dir1
+checkFunctions
+scp -r $temp_dir2/* $user@$ip:$s_dir2
+checkFunctions
+echo "Cope config file done"
+
+echo "Remove temple file"
+rm -rf $temp_dir
+checkFunctions
+echo "rm done"
+
+#从远程仓库拉镜像
+dockerResult=$(curl -s $repository_addr/v2/_catalog )
+if  [[ $dockerResult ]]
+	then
+		echo "remote $repository_addr  docker repository usable"
+	else
+	echo "remote $repository_addr  docker repository confuse connect"
+exit -1
+fi
+
+version=$(curl -s $repository_addr/v2/$service_name/tags/list)
+if [[ $version != *errors*  ]]
+	then
+		echo "$service_name version list"
+	else
+	echo "version not found ,exit"
+exit -1
+fi
+
+version_arr=`echo $version|cut -d '[' -f2|cut -d ']' -f1`
+
+echo $version_arr | awk  'BEGIN{RS=","}{print FNR":" $1}'
+while(true)
+do
+	echo "input number to choose images"
+	read tag
+	IFS=","
+	arr=($version_arr)
+	if echo $tag |egrep -q "^[1-"${#arr[@]}"]{1}$"
+		then
+			echo "you choose the version is ${arr[$tag-1]}"
+			break
+		else
+		echo "error,input numbers between 1-${#arr[@]}"
+	fi
+done
+
+echo "run docker in $ip"
+ssh $user@$ip "docker run --name=pss --net=host --log-opt max-size=1m --log-opt max-file=3 --restart=always -v /etc/localtime:/etc/localtime:ro -v $s_dir1/$config1:/usr/local/nginx-gridfs/conf/nginx.conf -v $s_dir1/logs:/usr/local/nginx-gridfs/logs -v $s_dir2/data/db:/usr/local/mongodb/data/db -v $s_dir2/logs:/usr/local/mongodb/logs -v $s_dir2/$config2:/usr/local/mongodb/etc/mongodb.conf -itd $repository_addr/$service_name:${arr[$ss-1]}"
+checkFunctions
+echo "clean mongodb logs start..."
+ssh $user@$ip "cd $s_dir2 ; chmod 755 clean_mongodb_log.sh ; bash clean_mongodb_log.sh >/dev/null 2>&1 &"
+echo "clean mongodb logs end..."
+echo "run docker done"

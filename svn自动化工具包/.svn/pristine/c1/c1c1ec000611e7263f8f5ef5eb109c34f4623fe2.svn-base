@@ -1,0 +1,157 @@
+#!/bin/bash
+war=".war"
+war1="background"
+war2="javaCms"
+war3="jwzh"
+war4="mq-jwzh"
+war5="socketio-jwzh"
+war6="stream-loadbalance-jwzh"
+war7="vod-loadbalance-jwzh"
+cfg_bkup="config"
+warfile="war"
+new_warfile="war_modify"
+web_inf="WEB-INF"
+classes="classes"
+stat="static"
+cfg="config.js"
+j=".jar"
+warpack=(0 $war1 $war2 $war3 $war4 $war5 $war6 $war7)
+path=$1/javaWar
+
+#处理background
+funcwar1(){
+	echo ${warpack[$1]}
+	unzip $path/$warfile/${warpack[$1]}$war -d $path/$new_warfile/${warpack[$1]}
+	if [ $1 -ne 7 ]
+	then
+		cp -arf $path/$cfg_bkup/${warpack[$1]}/* $path/$new_warfile/${warpack[$1]}/$web_inf/$classes
+	fi
+	cd $path/$new_warfile/${warpack[$1]}
+	zip -qr ${warpack[$1]}$war ./*
+	mv ${warpack[$1]}$war ../
+	cd ..
+	rm -rf ${warpack[$1]}
+}
+
+funcwar(){
+	unzip $path/$warfile/$war1$war -d $path/$new_warfile/$war1
+	unzip $path/$new_warfile/$war1/$web_inf/lib/server-background-1.0.0.1$j  -d  $path/$new_warfile/$war1/$web_inf/lib/server-background-1.0.0.1
+	unzip $path/$new_warfile/$war1/$web_inf/lib/server-common-1.0.0.1$j  -d  $path/$new_warfile/$war1/$web_inf/lib/server-common-1.0.0.1
+	
+	cp -arf $path/$cfg_bkup/$war1/server-background-1.0.0.1/* $path/$new_warfile/$war1/$web_inf/lib/server-background-1.0.0.1/
+	cp -arf $path/$cfg_bkup/$war1/server-common-1.0.0.1/* $path/$new_warfile/$war1/$web_inf/lib/server-common-1.0.0.1/
+	
+	rm -rf $path/$new_warfile/$war1/$web_inf/lib/server-background-1.0.0.1$j
+	rm -rf $path/$new_warfile/$war1/$web_inf/lib/server-common-1.0.0.1$j
+	
+	cd $path/$new_warfile/$war1/$web_inf/lib/server-background-1.0.0.1
+	zip -qr server-background-1.0.0.1$j ./*
+	mv server-background-1.0.0.1$j ../
+	rm -rf $path/$new_warfile/$war1/$web_inf/lib/server-background-1.0.0.1
+	
+	cd $path/$new_warfile/$war1/$web_inf/lib/server-common-1.0.0.1
+	zip -qr server-common-1.0.0.1$j ./*
+	mv server-common-1.0.0.1$j ../
+	rm -rf $path/$new_warfile/$war1/$web_inf/lib/server-common-1.0.0.1
+	
+	cd $path/$new_warfile/$war1
+	zip -qr $war1$war ./*
+	mv $war1$war ../
+	cd ..
+	rm -rf $war1
+}
+
+
+
+#处理javaCms
+
+
+funcwar2(){
+	unzip $path/$warfile/$war2$war -d $path/$new_warfile/$war2
+	cp -arf $path/$cfg_bkup/$war2/* $path/$new_warfile/$war2/$web_inf/$classes/
+	cd $path/$new_warfile/$war2
+	zip -qr $war2$war ./*
+	mv $war2$war ../
+	cd ..
+	rm -rf $war2
+}
+
+
+#处理jwzh.war
+
+funcwar3(){
+	unzip $path/$warfile/$war3$war -d $path/$new_warfile/$war3
+	cp -arf $path/$cfg_bkup/$war3/$stat/* $path/$new_warfile/$war3/$stat/
+
+	unzip $path/$new_warfile/$war3/$web_inf/lib/server-jwzh-1.0.0.1$j  -d  $path/$new_warfile/$war3/$web_inf/lib/server-jwzh-1.0.0.1
+	unzip $path/$new_warfile/$war3/$web_inf/lib/server-common-1.0.0.1$j  -d  $path/$new_warfile/$war3/$web_inf/lib/server-common-1.0.0.1
+
+	cp -arf $path/$cfg_bkup/$war3/server-jwzh-1.0.0.1/* $path/$new_warfile/$war3/$web_inf/lib/server-jwzh-1.0.0.1/
+	cp -arf $path/$cfg_bkup/$war3/server-common-1.0.0.1/* $path/$new_warfile/$war3/$web_inf/lib/server-common-1.0.0.1/
+
+	rm -rf $path/$new_warfile/$war3/$web_inf/lib/server-jwzh-1.0.0.1$j
+	rm -rf $path/$new_warfile/$war3/$web_inf/lib/server-common-1.0.0.1$j
+
+	cd $path/$new_warfile/$war3/$web_inf/lib/server-jwzh-1.0.0.1
+	zip -qr server-jwzh-1.0.0.1$j ./*
+	mv server-jwzh-1.0.0.1$j ../
+	rm -rf $path/$new_warfile/$war3/$web_inf/lib/server-jwzh-1.0.0.1
+
+	cd $path/$new_warfile/$war3/$web_inf/lib/server-common-1.0.0.1
+	zip -qr server-common-1.0.0.1$j ./*
+	mv server-common-1.0.0.1$j ../
+	rm -rf $path/$new_warfile/$war3/$web_inf/lib/server-common-1.0.0.1
+
+	cd $path/$new_warfile/$war3
+	zip -qr $war3$war ./*
+	mv $war3$war ../
+	cd ..
+	rm -rf $war3
+}
+
+#处理mq-jwzh
+
+
+
+#处理socketio-jwzh
+
+
+#处理负载均衡war
+
+funcwar8(){
+    funcwar
+    funcwar1 2
+    funcwar3
+    funcwar1 4
+    funcwar1 5
+    funcwar1 6
+    funcwar1 7
+}
+
+choose=$2
+if [ $choose == "socketio-jwzh/jwzh/background" ]
+then
+    funcwar
+	funcwar3
+	funcwar1 5
+elif [ $choose == "javaCms/mq-jwzh" ]
+then
+	funcwar1 2
+	funcwar1 4
+elif [ $choose == "stream-loadbalance-jwzh/vod-loadbalance-jwzh" ]
+then
+    funcwar1 6
+	funcwar1 7
+elif [ $choose == "All" ]
+then
+    funcwar8
+elif [ $choose == 0 ]
+then
+    echo "quit modify"
+    exit
+else
+    echo ""
+fi
+
+basepath=$path/$new_warfile
+echo "modify war path [ $basepath ]"

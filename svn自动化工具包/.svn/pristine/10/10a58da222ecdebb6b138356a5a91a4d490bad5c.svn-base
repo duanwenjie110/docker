@@ -1,0 +1,162 @@
+#!/bin/bash
+war1="background"
+war2="javaCms"
+war3="jwzh"
+war4="mq-jwzh"
+war5="socketio-jwzh"
+war6="stream-loadbalance-jwzh"
+war7="vod-loadbalance-jwzh"
+cfg_bkup="config"
+#war包地址，注意与$path配合
+new_warfile="war"
+web_inf="WEB-INF"
+classes="classes"
+stat="static"
+cfg="config.js"
+j=".jar"
+war=".war"
+warpack=(0 $war1 $war2 $war3 $war4 $war5 $war6 $war7)
+path=$1/javaWar
+#path=`pwd`
+cd $path
+mkdir -p config
+cd config
+#mkdir -p background javaCms jwzh mq-jwzh socketio-jwzh stream-loadbalance-jwzh vod-loadbalance-jwzh
+#mkdir -p background/server-background-1.0.0.1 jwzh/server-jwzh-1.0.0.1 jwzh/static
+back_up1(){
+#备份background
+   if [ -e $path/$new_warfile/$war1$war ];then
+        mkdir -p $war1
+        mkdir -p $war1/server-background-1.0.0.1
+        mkdir -p $war1/server-common-1.0.0.1		
+		unzip -o $path/$new_warfile/$war1$war  -d $path/$new_warfile/$war1
+        unzip -o $path/$new_warfile/$war1/$web_inf/lib/server-background-1.0.0.1$j  -d  $path/$new_warfile/$war1/$web_inf/lib/server-background-1.0.0.1
+        unzip -o $path/$new_warfile/$war1/$web_inf/lib/server-common-1.0.0.1$j  -d  $path/$new_warfile/$war1/$web_inf/lib/server-common-1.0.0.1		
+		
+		cp -arf $path/$new_warfile/$war1/$web_inf/lib/server-background-1.0.0.1/*.properties $path/$cfg_bkup/$war1/server-background-1.0.0.1/
+		cp -arf $path/$new_warfile/$war1/$web_inf/lib/server-common-1.0.0.1/*.properties $path/$cfg_bkup/$war1/server-common-1.0.0.1/
+		
+     	rm -rf $path/$new_warfile/$war1/$web_inf/lib/server-background-1.0.0.1
+        rm -rf $path/$new_warfile/$war1/$web_inf/lib/server-common-1.0.0.1
+		rm -rf $path/$new_warfile/$war1
+else
+	echo "war pack background.war not exist, please check"
+	exit
+   fi
+   }
+   
+  back_up2(){
+#备份javaCms
+   if [ -e $path/$new_warfile/$war2$war ];then
+        mkdir -p $war2
+		unzip -o $path/$new_warfile/$war2$war  -d $path/$new_warfile/$war2
+	cp -arf $path/$new_warfile/$war2/$web_inf/$classes/cms.properties $path/$cfg_bkup/$war2/
+		rm -rf $path/$new_warfile/$war2
+else
+	echo "war pack javaCms.war not exist, please check"
+	exit
+   fi
+ }
+ 
+ back_up3(){
+#备份jwzh
+   if [ -e $path/$new_warfile/$war3$war ];then
+        mkdir -p $war3
+        mkdir -p jwzh/server-jwzh-1.0.0.1 jwzh/static
+		mkdir -p jwzh/server-common-1.0.0.1
+		
+		unzip -o $path/$new_warfile/$war3$war  -d $path/$new_warfile/$war3
+		unzip -o $path/$new_warfile/$war3/$web_inf/lib/server-jwzh-1.0.0.1$j  -d  $path/$new_warfile/$war3/$web_inf/lib/server-jwzh-1.0.0.1
+		unzip -o $path/$new_warfile/$war3/$web_inf/lib/server-common-1.0.0.1$j  -d  $path/$new_warfile/$war3/$web_inf/lib/server-common-1.0.0.1		
+		
+		cp -arf $path/$new_warfile/$war3/$web_inf/lib/server-jwzh-1.0.0.1/*.properties $path/$cfg_bkup/$war3/server-jwzh-1.0.0.1/
+		cp -arf $path/$new_warfile/$war3/$web_inf/lib/server-common-1.0.0.1/*.properties $path/$cfg_bkup/$war3/server-common-1.0.0.1/		
+		
+        rm -rf $path/$new_warfile/$war3/$web_inf/lib/server-jwzh-1.0.0.1
+        rm -rf $path/$new_warfile/$war3/$web_inf/lib/server-common-1.0.0.1		
+		
+        cp -arf $path/$new_warfile/$war3/$stat/config.js $path/$cfg_bkup/$war3/$stat/
+		rm -rf $path/$new_warfile/$war3
+else
+	echo "war pack jwzh.war not exist, please check"
+	exit		
+   fi
+ }
+ 
+ back_up4(){
+#备份mq-jwzh
+   if [ -e $path/$new_warfile/$war4$war ];then
+        mkdir -p $war4
+		unzip -o $path/$new_warfile/$war4$war  -d $path/$new_warfile/$war4
+        cp -arf $path/$new_warfile/$war4/$web_inf/$classes/*.properties $path/$cfg_bkup/$war4/
+		rm -rf $path/$new_warfile/$war4
+else
+	echo "war pack mq-jwzh.war not exist, please check"
+	exit
+   fi
+ }
+ 
+ back_up5(){
+#备份socketio-jwzh
+   if [ -e $path/$new_warfile/$war5$war ];then
+        mkdir -p $war5
+		unzip -o $path/$new_warfile/$war5$war  -d $path/$new_warfile/$war5
+ 	cp -arf $path/$new_warfile/$war5/$web_inf/$classes/websocket.properties $path/$cfg_bkup/$war5/
+	rm -rf $path/$new_warfile/$war5
+else
+	echo "war pack socketio-jwzh.war not exist, please check"
+	exit
+   fi
+}	
+
+back_up6(){
+#备份stream-loadbalance-jwzh
+   if [ -e $path/$new_warfile/$war6$war ];then
+        mkdir -p $war6
+		unzip -o $path/$new_warfile/$war6$war  -d $path/$new_warfile/$war6
+        cp -arf $path/$new_warfile/$war6/$web_inf/$classes/*.properties $path/$cfg_bkup/$war6/
+		rm -rf $path/$new_warfile/$war6
+else
+	echo "war pack stream-loadbalance-jwzh.war not exist, please check"
+	exit
+   fi
+ }
+ back_up7(){
+#备份vod-loadbalance-jwzh
+#暂无配置文件需要备份
+   if [ -e $path/$new_warfile/$war7$war ];then
+       mkdir -p $war7
+else
+	echo "war pack vod-loadbalance-jwzh.war not exist, please check"
+	exit
+   fi
+}
+
+ back_up8(){
+	back_up1
+	back_up2
+	back_up3
+	back_up4
+	back_up5
+	back_up6
+	back_up7
+ }
+
+choice=$2;
+#choice="All";
+if [[ $choice == "stream-loadbalance-jwzh/vod-loadbalance-jwzh" ]];then
+	back_up6
+	back_up7
+elif [[ $choice == "javaCms/mq-jwzh" ]];then
+	back_up2
+	back_up4
+elif [[ $choice == "socketio-jwzh/jwzh/background" ]];then
+	back_up1
+	back_up3	
+	back_up5
+elif [[ $choice == "All" ]];then
+	back_up8
+else
+	echo " "
+fi
+

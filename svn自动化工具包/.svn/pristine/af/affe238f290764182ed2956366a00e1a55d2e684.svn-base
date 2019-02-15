@@ -1,0 +1,41 @@
+#redis中心
+
+# Redis数据库索引（默认为0）
+spring.redis.database=0
+# Redis服务器地址
+spring.redis.host=192.168.3.241
+# Redis服务器连接端口
+spring.redis.port=6379
+# Redis服务器连接密码（默认为空）
+spring.redis.password=
+ 
+# REDIS基础配置
+
+spring.redis.pool.maxTotal=8
+spring.redis.pool.maxIdle=8
+spring.redis.pool.maxActive=8
+spring.redis.pool.maxWait=-1
+spring.redis.pool.testOnBorrow=true
+spring.redis.pool.timeout=500
+spring.redis.pool.maxWaitMillis=5000
+spring.redis.pool.minIdle = 0
+ 
+
+
+shiro.session.session-prefix = shiro-redis-session:
+#shiro session 在redis过期时间是(分钟)
+shiro.session.session-time = 10080
+#shiro缓存前缀
+shiro.cache.cache-prefix = shiro-redis-cache:
+#shiro缓存在redis过期时间是(分钟)
+shiro.cache.cache-time = 10080
+
+#JWT配置
+##认证名称
+jwt.header=authorization
+##加密向量
+jwt.secret=1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+##过期时间一天(秒)
+jwt.expiration=604800
+##Tokenu前缀
+jwt.token.head=Bearer

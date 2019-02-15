@@ -1,0 +1,11 @@
+dbpath=/usr/local/mongodb/data/db/			
+logpath=/usr/local/mongodb/logs/mongodb.log  
+port=27017								
+bind_ip = mongoIP					
+fork=true								
+journal=false
+storageEngine=mmapv1
+rest=true
+httpinterface=true
+logappend=true
+

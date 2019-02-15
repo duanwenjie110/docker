@@ -1,0 +1,9 @@
+#media server related
+lbConfig.mediaServerPorts=20000
+lbConfig.mediaServerAppName=live
+lbConfig.maxPlayCount=100
+
+#load balance related
+lbConfig.requestHandlersThreadCount=10
+lbConfig.syncServerStatusTimeInterval=500
+lbConfig.syncDataTimeInterval=500

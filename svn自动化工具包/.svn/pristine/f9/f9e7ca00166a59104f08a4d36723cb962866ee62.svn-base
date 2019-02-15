@@ -1,0 +1,15 @@
+#!/bin/bash
+set -e
+
+#debug mode
+if [ $# -ge "1" ] && [ $1 == "debug" ]
+then
+    /bin/bash
+else
+    #remove fs db data
+    if [ -d /usr/local/freeswitch/db/ ]
+    then
+        rm -rf /usr/local/freeswitch/db/*
+    fi
+    exec freeswitch
+fi

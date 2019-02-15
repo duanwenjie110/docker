@@ -1,0 +1,28 @@
+---modifyWarCfg.sh---
+1.脚本作用：
+  该脚本主要是帮助用户将配置信息在本地修订后，重新构建至war包中，减少用户操作；
+
+2.操作步骤
+    0.java的原始war包数据存放在war包目录下，war包依赖的配置文件存放在config目录下；
+    1.用户依据具体的工程环境修订配置文件；
+    2.在目录下运行./modifyWarCfg.sh。
+    3.替换配置文件后的war包存放在war_modify中；
+    4.在tomcat中部署war_modify下的war包即可。
+    
+    
+---backupWarCfg.sh---
+1.脚本作用：
+  该脚本辅助用户备份远端主机tomcat上的war包配置信息，放置到本地，方便用户进行war升级时使用
+  配合脚本“modifyWarCfg.sh”一起使用，避免在升级过程中配置信息的再次配置和相关异常错误。
+
+2.操作步骤
+  0.依据脚本执行操作
+  1.远端tomcat的war包配置信息存放在本地以"backup_***"的目录下(日期为结尾)
+  3.拷贝该文件到config目录，即可以使用脚本“modifyWarCfg.sh”进行war包配置信息替换
+  
+---backupExec.sh---
+1.脚本作用：
+  导出tomcat中war包的配置信息，该脚本供“backupWarCfg.sh”使用。
+  若用户希望手动备份，则需要将该脚本拷贝到远程tomcat的配置文件的部署目录下，直接执行该脚本即可。
+
+

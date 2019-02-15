@@ -1,0 +1,27 @@
+# base image
+FROM cppbaseos:V1.0.0H1.0.0
+
+# MAINTAINER
+MAINTAINER hxie@wtoe.cn
+
+# put linux-saaHkUhd.tar.bz2 into /usr/local/ and unpack
+ADD linux-saaHkUhd.tar.bz2 /usr/local/
+
+ENV PATH /usr/local/saaHkUhd/release/app:/usr/local/saaHkUhd/3rdlibs:/usr/local/saaHkUhd/3rdlibs/HCNetSDKCom:$PATH
+ENV LD_LIBRARY_PATH /usr/local/saaHkUhd/release/app:/usr/local/saaHkUhd/3rdlibs:/usr/local/saaHkUhd/3rdlibs/HCNetSDKCom:$LD_LIBRARY_PAT
+
+# copy entrypoint.sh
+COPY entrypoint.sh /usr/local/saaHkUhd/release/app/
+
+#create link
+RUN cd /usr/local/saaHkUhd/3rdlibs && \
+ln -fs CuiApp dsaHkUhd && \
+cd /usr/local/saaHkUhd/release/app/ && \
+chmod 777 entrypoint.sh
+
+# change dir to /usr/local/saaHkUhd/
+WORKDIR /usr/local/saaHkUhd/release/app/
+
+# execute command when container exec
+ENTRYPOINT ["entrypoint.sh"]
+

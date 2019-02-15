@@ -1,0 +1,3 @@
+#websocketio消息推送
+websocket.host=192.168.3.241
+websocket.port=9092

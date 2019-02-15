@@ -1,0 +1,7 @@
+0.java的原始war包数据存放在war包目录下，war包依赖的配置文件存放在config目录下；
+1.用户依据具体的工程环境修订配置文件；
+2.在目录下运行./modifyWarCfg.sh。
+3.替换配置文件后的war包存放在war_modify中；
+4.在tomcat中部署war_modify下的war包即可。
+
+

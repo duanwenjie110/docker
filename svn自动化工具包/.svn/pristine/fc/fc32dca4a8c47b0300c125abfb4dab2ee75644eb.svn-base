@@ -1,0 +1,6 @@
+localIpPort1
+localIpPort2
+#请保留此注释
+#第二行为此CMS程序监听的RIMI链接用的地址
+#第三行为此CMS程序监听的RSIO链接用的地址
+#其他的行,全认为是注释,不读取.

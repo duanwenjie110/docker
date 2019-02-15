@@ -1,0 +1,21 @@
+#! /bin/bash
+logdir=/usr/local/volume/conf/mongodb/logs
+#logdir=/home/docker/volume/mongo/logs/
+cd ${logdir}
+i=1
+while [ $i -le 100 ]
+do
+  echo "logs delete start..."
+  declare -i filesum=`ls mongodb.* | wc -l`
+  declare -i delnum=$filesum-3
+  if [ "${delnum}" -ge 1 ];then
+  rm -rf `ls -tr mongodb.* | head -${delnum}`
+  fi
+  echo "logs delete end..."
+  sleep 86400  
+done
+
+
+
+
+
